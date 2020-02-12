@@ -41,21 +41,38 @@
 #include <pcl/point_types.h>
 #include <pcl/common/common.h>
 
+#ifdef __SSE__
+#include <pcl/sse.h>
+#endif
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 inline double
 pcl::getAngle3D (const Eigen::Vector4f &v1, const Eigen::Vector4f &v2, const bool in_degree)
 {
-  // Compute the actual angle
-  double rad = v1.normalized ().dot (v2.normalized ());
-  if (rad < -1.0)
-    rad = -1.0;
-  else if (rad >  1.0)
-    rad = 1.0;
-  return (in_degree ? std::acos (rad) * 180.0 / M_PI : std::acos (rad));
+  return pcl::getAngle3D(pcl::executor::best_fit{}, (Eigen::Vector3f) v1.head<3>(), (Eigen::Vector3f) v2.head<3>(), in_degree);
 }
 
 inline double
-pcl::getAngle3D (const Eigen::Vector3f &v1, const Eigen::Vector3f &v2, const bool in_degree)
+pcl::getAngle3D (pcl::executor::normal, const Eigen::Vector4f &v1, const Eigen::Vector4f &v2, const bool in_degree)
+{
+  return pcl::getAngle3D(pcl::executor::normal{}, (Eigen::Vector3f) v1.head<3>(), (Eigen::Vector3f) v2.head<3>(), in_degree);
+}
+
+#ifdef __SSE__
+inline double
+pcl::getAngle3D (pcl::executor::sse, const Eigen::Vector4f &v1, const Eigen::Vector4f &v2, const bool in_degree)
+{
+  return pcl::getAngle3D(pcl::executor::sse{}, (Eigen::Vector3f) v1.head<3>(), (Eigen::Vector3f) v2.head<3>(), in_degree);
+}
+#endif
+
+inline double
+pcl::getAngle3D (const Eigen::Vector3f &v1, const Eigen::Vector3f &v2, const bool in_degree) {
+  return pcl::getAngle3D(pcl::executor::best_fit{}, v1, v2, in_degree);
+}
+
+inline double
+pcl::getAngle3D (pcl::executor::normal, const Eigen::Vector3f &v1, const Eigen::Vector3f &v2, const bool in_degree)
 {
   // Compute the actual angle
   double rad = v1.normalized ().dot (v2.normalized ());
@@ -67,6 +84,27 @@ pcl::getAngle3D (const Eigen::Vector3f &v1, const Eigen::Vector3f &v2, const boo
 }
 
 #ifdef __SSE__
+
+inline double
+pcl::getAngle3D (pcl::executor::sse, const Eigen::Vector3f &v1, const Eigen::Vector3f &v2, const bool in_degree)
+{
+  __m128 mv1 = {v1[0], v1[1], v1[2], 0.0}, mv2 = {v2[0], v2[1], v2[2], 0.0};
+  __m128 v1_norm = pcl::normalize(mv1), v2_norm = pcl::normalize(mv2);
+  const __m128 dot_product = sse_mul(v1_norm, v2_norm);
+  const __m128 v_sum = sse_hadd(dot_product, dot_product);
+  const __m128 rad = sse_min(sse_set (1.0f), sse_andnot(sse_set (-0.0f), sse_hadd(v_sum, v_sum)));
+  return (in_degree ? std::acos ((double) rad[0]) * 180.0 / M_PI : std::acos ((double) rad[0]));
+}
+
+inline __m128
+pcl::normalize(__m128 &x)
+{
+  const __m128 norm = sse_mul(x, x);
+  const __m128 v_sum = sse_hadd(norm, norm);
+  return sse_mul(x, sse_rcpsqrt(sse_set(sse_hadd(v_sum, v_sum)[0])));
+}
+
+
 inline __m128
 pcl::acos_SSE (const __m128 &x)
 {

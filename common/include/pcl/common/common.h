@@ -49,6 +49,19 @@
 /*@{*/
 namespace pcl
 {
+
+  namespace executor {
+    template <std::size_t n> struct priority;
+    template <> struct priority<0> {};
+    template <std::size_t n> struct priority: priority<n-1> {};
+
+    using normal = priority <0>;
+    using avx2 = priority <1>;
+    using sse = priority <2>;
+    using best_fit = sse;
+  }
+
+
   /** \brief Compute the smallest angle between two 3D vectors in radians (default) or degree.
     * \param v1 the first 3D vector (represented as a \a Eigen::Vector4f)
     * \param v2 the second 3D vector (represented as a \a Eigen::Vector4f)
@@ -59,6 +72,14 @@ namespace pcl
   inline double 
   getAngle3D (const Eigen::Vector4f &v1, const Eigen::Vector4f &v2, const bool in_degree = false);
 
+  inline double
+  getAngle3D (executor::normal, const Eigen::Vector4f &v1, const Eigen::Vector4f &v2, const bool in_degree = false);
+
+#ifdef __SSE__
+  inline double
+  getAngle3D (executor::sse, const Eigen::Vector4f &v1, const Eigen::Vector4f &v2, const bool in_degree = false);
+#endif
+
   /** \brief Compute the smallest angle between two 3D vectors in radians (default) or degree.
     * \param v1 the first 3D vector (represented as a \a Eigen::Vector3f)
     * \param v2 the second 3D vector (represented as a \a Eigen::Vector3f)
@@ -66,11 +87,23 @@ namespace pcl
     * \return the angle between v1 and v2 in radians or degrees
     * \ingroup common
     */
+
   inline double
   getAngle3D (const Eigen::Vector3f &v1, const Eigen::Vector3f &v2, const bool in_degree = false);
+  
+  inline double
+  getAngle3D (executor::normal, const Eigen::Vector3f &v1, const Eigen::Vector3f &v2, const bool in_degree = false);
 
 #ifdef __SSE__
-  /** \brief Compute the approximate arccosine of four values at once using SSE instructions.
+  inline double
+  getAngle3D (executor::sse, const Eigen::Vector3f &v1, const Eigen::Vector3f &v2, const bool in_degree = false);
+#endif
+
+#ifdef __SSE__
+  inline __m128
+  normalize(__m128 &x);
+
+/** \brief Compute the approximate arccosine of four values at once using SSE instructions.
     *
     * The approximation used is \f$ (1.59121552+x*(-0.15461442+x*0.05354897))*\sqrt{0.89286965-0.89282669*x}+0.06681017+x*(-0.09402311+x*0.02708663) \f$.
     * The average error is 0.00012 rad. This approximation is more accurate than other approximations of acos, but also uses a few more operations.

@@ -64,6 +64,7 @@ RETf sse_add( const __m128 x, const __m128 y, const __m128 z ) {
   return sse_add(sse_add(x,y),z); }
 RETf sse_add( const __m128 a, const __m128 b, const __m128 c, const __m128 &d ) {
   return sse_add(sse_add(sse_add(a,b),c),d); }
+RETf sse_hadd( const __m128 x, const __m128 y ) { return _mm_hadd_ps(x,y); }
 RETf sse_sub( const __m128 x, const __m128 y ) { return _mm_sub_ps(x,y); }
 RETf sse_mul( const __m128 x, const __m128 y ) { return _mm_mul_ps(x,y); }
 RETf sse_mul( const __m128 x, const float y ) { return sse_mul(x,sse_set(y)); }
