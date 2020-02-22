@@ -42,6 +42,7 @@
 
 #include <pcl/sample_consensus/sac_model.h>
 #include <pcl/sample_consensus/model_types.h>
+#include <pcl/common/common.h>
 
 namespace pcl
 {
@@ -216,6 +217,20 @@ namespace pcl
       countWithinDistance (const Eigen::VectorXf &model_coefficients,
                            const double threshold) const override;
 
+      std::size_t
+      countWithinDistance (pcl::executor::normal, const Eigen::VectorXf &model_coefficients,
+                          const double threshold) const;
+#if defined (__AVX__) && defined (__AVX2__)
+      std::size_t
+      countWithinDistance (pcl::executor::avx2, const Eigen::VectorXf &model_coefficients,
+      const double threshold) const;
+#endif
+
+#if defined (__SSE__) && defined (__SSE2__) && defined (__SSE4_1__)
+std::size_t
+      countWithinDistance (pcl::executor::sse, const Eigen::VectorXf &model_coefficients,
+      const double threshold) const;
+#endif
       /** \brief Recompute the plane coefficients using the given inlier set and return them to the user.
         * @note: these are the coefficients of the plane model after refinement (e.g. after SVD)
         * \param[in] inliers the data inliers found as supporting the model

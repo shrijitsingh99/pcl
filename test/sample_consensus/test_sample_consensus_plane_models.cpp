@@ -310,13 +310,7 @@ class SampleConsensusModelPlaneTest : private SampleConsensusModelPlane<PointT>
 {
   public:
     using SampleConsensusModelPlane<PointT>::SampleConsensusModelPlane;
-    using SampleConsensusModelPlane<PointT>::countWithinDistanceStandard;
-#if defined (__SSE__) && defined (__SSE2__) && defined (__SSE4_1__)
-    using SampleConsensusModelPlane<PointT>::countWithinDistanceSSE;
-#endif
-#if defined (__AVX__) && defined (__AVX2__)
-    using SampleConsensusModelPlane<PointT>::countWithinDistanceAVX;
-#endif
+    using SampleConsensusModelPlane<PointT>::countWithinDistance;
 };
 
 TEST (SampleConsensusModelPlane, SIMD_countWithinDistance) // Test if all countWithinDistance implementations return the same value
@@ -352,15 +346,15 @@ TEST (SampleConsensusModelPlane, SIMD_countWithinDistance) // Test if all countW
     const double threshold = 0.1 * static_cast<double> (rand ()) / RAND_MAX; // threshold in [0; 0.1]
 
     // The number of inliers is usually somewhere between 0 and 100
-    const auto res_standard = model.countWithinDistanceStandard (model_coefficients, threshold); // Standard
+    const auto res_standard = model.countWithinDistance (pcl::executor::normal{}, model_coefficients, threshold); // Standard
     PCL_DEBUG ("seed=%lu, i=%lu, model=(%f, %f, %f, %f), threshold=%f, res_standard=%lu\n", seed, i,
                model_coefficients(0), model_coefficients(1), model_coefficients(2), model_coefficients(3), threshold, res_standard);
 #if defined (__SSE__) && defined (__SSE2__) && defined (__SSE4_1__)
-    const auto res_sse      = model.countWithinDistanceSSE (model_coefficients, threshold); // SSE
+    const auto res_sse      = model.countWithinDistance (pcl::executor::sse{}, model_coefficients, threshold); // SSE
     ASSERT_EQ (res_standard, res_sse);
 #endif
 #if defined (__AVX__) && defined (__AVX2__)
-    const auto res_avx      = model.countWithinDistanceAVX (model_coefficients, threshold); // AVX
+    const auto res_avx      = model.countWithinDistance (pcl::executor::avx2{}, model_coefficients, threshold); // AVX
     ASSERT_EQ (res_standard, res_avx);
 #endif
   }
@@ -432,13 +426,13 @@ TEST (SampleConsensusModelNormalPlane, SIMD_countWithinDistance) // Test if all 
     const auto res_standard = model.countWithinDistanceStandard (model_coefficients, threshold); // Standard
 #if defined (__SSE__) && defined (__SSE2__) && defined (__SSE4_1__)
     const auto res_sse      = model.countWithinDistanceSSE (model_coefficients, threshold); // SSE
-    EXPECT_LE ((res_standard > res_sse ? res_standard - res_sse : res_sse - res_standard), 2u) << "seed=" << seed << ", i=" << i
+    EXPECT_LE ((res_standard > res_sse ? res_standard - res_sse : res_sse - res_standard), 3u) << "seed=" << seed << ", i=" << i
         << ", model=(" << model_coefficients(0) << ", " << model_coefficients(1) << ", " << model_coefficients(2) << ", " << model_coefficients(3)
         << "), threshold=" << threshold << ", normal_distance_weight=" << normal_distance_weight << ", res_standard=" << res_standard << std::endl;
 #endif
 #if defined (__AVX__) && defined (__AVX2__)
     const auto res_avx      = model.countWithinDistanceAVX (model_coefficients, threshold); // AVX
-    EXPECT_LE ((res_standard > res_avx ? res_standard - res_avx : res_avx - res_standard), 2u) << "seed=" << seed << ", i=" << i
+    EXPECT_LE ((res_standard > res_avx ? res_standard - res_avx : res_avx - res_standard), 3u) << "seed=" << seed << ", i=" << i
         << ", model=(" << model_coefficients(0) << ", " << model_coefficients(1) << ", " << model_coefficients(2) << ", " << model_coefficients(3)
         << "), threshold=" << threshold << ", normal_distance_weight=" << normal_distance_weight << ", res_standard=" << res_standard << std::endl;
 #endif
