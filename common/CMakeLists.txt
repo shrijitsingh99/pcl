@@ -86,6 +86,7 @@ set(common_incs
   include/pcl/common/centroid.h
   include/pcl/common/concatenate.h
   include/pcl/common/common.h
+  include/pcl/common/executor.h
   include/pcl/common/common_headers.h
   include/pcl/common/distances.h
   include/pcl/common/eigen.h

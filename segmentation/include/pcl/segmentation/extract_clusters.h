@@ -40,7 +40,9 @@
 #pragma once
 
 #include <pcl/pcl_base.h>
-
+#include <pcl/common/executor.h>
+//#include <pcl/gpu/segmentation/gpu_extract_clusters.h>
+//#include <pcl/gpu/segmentation/impl/gpu_extract_clusters.hpp>
 #include <pcl/search/pcl_search.h>
 
 namespace pcl
@@ -58,9 +60,16 @@ namespace pcl
     */
   template <typename PointT> void 
   extractEuclideanClusters (
-      const PointCloud<PointT> &cloud, const typename search::Search<PointT>::Ptr &tree,
+      const PointCloud<PointT> &cloud,
       float tolerance, std::vector<PointIndices> &clusters,
       unsigned int min_pts_per_cluster = 1, unsigned int max_pts_per_cluster = (std::numeric_limits<int>::max) ());
+
+    template <typename PointT> void
+    extractEuclideanClusters (
+            pcl::executor::cpu,
+            const PointCloud<PointT> &cloud,
+            float tolerance, std::vector<PointIndices> &clusters,
+            unsigned int min_pts_per_cluster = 1, unsigned int max_pts_per_cluster = (std::numeric_limits<int>::max) ());
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /** \brief Decompose a region of space into clusters based on the Euclidean distance between points

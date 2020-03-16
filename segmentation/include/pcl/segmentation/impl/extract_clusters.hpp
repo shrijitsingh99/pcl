@@ -41,13 +41,28 @@
 #include <pcl/segmentation/extract_clusters.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+
 template <typename PointT> void
 pcl::extractEuclideanClusters (const PointCloud<PointT> &cloud,
-                               const typename search::Search<PointT>::Ptr &tree,
+                               float tolerance,
+                               std::vector<PointIndices> &clusters,
+                               unsigned int min_pts_per_cluster,
+                               unsigned int max_pts_per_cluster)
+{
+    extractEuclideanClusters<PointT>(pcl::executor::cpu{}, cloud, tolerance, clusters, min_pts_per_cluster, max_pts_per_cluster);
+}
+
+template <typename PointT> void
+pcl::extractEuclideanClusters (pcl::executor::cpu,
+                               const PointCloud<PointT> &cloud,
                                float tolerance, std::vector<PointIndices> &clusters,
                                unsigned int min_pts_per_cluster,
                                unsigned int max_pts_per_cluster)
 {
+  std::cout<<"Running on CPU"<<std::endl;
+  typename pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
+  typename pcl::PointCloud<PointT>::Ptr cloud_filtered = cloud.makeShared();
+  tree->setInputCloud (cloud_filtered);
   if (tree->getInputCloud ()->points.size () != cloud.points.size ())
   {
     PCL_ERROR ("[pcl::extractEuclideanClusters] Tree built for a different point cloud dataset (%lu) than the input cloud (%lu)!\n", tree->getInputCloud ()->points.size (), cloud.points.size ());
@@ -206,10 +221,10 @@ pcl::extractEuclideanClusters (const PointCloud<PointT> &cloud,
 //////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-template <typename PointT> void 
+template <typename PointT> void
 pcl::EuclideanClusterExtraction<PointT>::extract (std::vector<PointIndices> &clusters)
 {
-  if (!initCompute () || 
+  if (!initCompute () ||
       (input_   && input_->points.empty ()) ||
       (indices_ && indices_->empty ()))
   {
@@ -240,7 +255,8 @@ pcl::EuclideanClusterExtraction<PointT>::extract (std::vector<PointIndices> &clu
 }
 
 #define PCL_INSTANTIATE_EuclideanClusterExtraction(T) template class PCL_EXPORTS pcl::EuclideanClusterExtraction<T>;
-#define PCL_INSTANTIATE_extractEuclideanClusters(T) template void PCL_EXPORTS pcl::extractEuclideanClusters<T>(const pcl::PointCloud<T> &, const typename pcl::search::Search<T>::Ptr &, float , std::vector<pcl::PointIndices> &, unsigned int, unsigned int);
+#define PCL_INSTANTIATE_extractEuclideanClusters(T) template void PCL_EXPORTS pcl::extractEuclideanClusters<T>(const pcl::PointCloud<T> &, float , std::vector<pcl::PointIndices> &, unsigned int, unsigned int);
+#define PCL_INSTANTIATE_extractEuclideanClusters_CPU(T) template void PCL_EXPORTS pcl::extractEuclideanClusters<T>(pcl::executor::cpu, const pcl::PointCloud<T> &, float , std::vector<pcl::PointIndices> &, unsigned int, unsigned int);
 #define PCL_INSTANTIATE_extractEuclideanClusters_indices(T) template void PCL_EXPORTS pcl::extractEuclideanClusters<T>(const pcl::PointCloud<T> &, const std::vector<int> &, const typename pcl::search::Search<T>::Ptr &, float , std::vector<pcl::PointIndices> &, unsigned int, unsigned int);
 
 #endif        // PCL_EXTRACT_CLUSTERS_IMPL_H_

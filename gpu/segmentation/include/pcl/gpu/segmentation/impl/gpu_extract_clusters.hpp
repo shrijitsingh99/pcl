@@ -41,23 +41,41 @@
 
 #include <pcl/gpu/segmentation/gpu_extract_clusters.h>
 
-void
-pcl::gpu::extractEuclideanClusters (const pcl::PointCloud<pcl::PointXYZ>::Ptr  &host_cloud_,
-                                    const pcl::gpu::Octree::Ptr                &tree,
+template <typename PointT> void
+pcl::extractEuclideanClusters (pcl::executor::gpu,
+                                    const typename pcl::PointCloud<PointT>  &host_cloud_,
                                     float                                      tolerance,
                                     std::vector<PointIndices>                  &clusters,
                                     unsigned int                               min_pts_per_cluster,
                                     unsigned int                               max_pts_per_cluster)
 {
+    return pcl::extractEuclideanClusters<PointT> (host_cloud_, tolerance, clusters, min_pts_per_cluster, max_pts_per_cluster);
+}
+
+template <> void
+pcl::extractEuclideanClusters<pcl::PointXYZ> (pcl::executor::gpu,
+                                    const pcl::PointCloud<pcl::PointXYZ> &host_cloud_,
+                                    float                                      tolerance,
+                                    std::vector<PointIndices>                  &clusters,
+                                    unsigned int                               min_pts_per_cluster,
+                                    unsigned int                               max_pts_per_cluster)
+{
+    std::cout<<"Running on GPU"<<std::endl;
+    pcl::gpu::Octree::PointCloud cloud_device;
+    cloud_device.upload(host_cloud_.points);
+
+    pcl::gpu::Octree::Ptr tree (new pcl::gpu::Octree);
+    tree->setCloud(cloud_device);
+    tree->build();
 
   // Create a bool vector of processed point indices, and initialize it to false
   // cloud is a DeviceArray<PointType>
-  std::vector<bool> processed (host_cloud_->points.size (), false);
+  std::vector<bool> processed (host_cloud_.points.size (), false);
 
   int max_answers;
 
-  if(max_pts_per_cluster > host_cloud_->points.size())
-    max_answers = host_cloud_->points.size();
+  if(max_pts_per_cluster > host_cloud_.points.size())
+    max_answers = host_cloud_.points.size();
   else
     max_answers = max_pts_per_cluster;
   std::cout << "Max_answers: " << max_answers << std::endl;
@@ -65,11 +83,11 @@ pcl::gpu::extractEuclideanClusters (const pcl::PointCloud<pcl::PointXYZ>::Ptr  &
   // to store the current cluster
   pcl::PointIndices r;
 
-  DeviceArray<PointXYZ> queries_device_buffer;
+  pcl::gpu::DeviceArray<PointXYZ> queries_device_buffer;
   queries_device_buffer.create(max_answers);
 
   // Process all points in the cloud
-  for (std::size_t i = 0; i < host_cloud_->points.size (); ++i)
+  for (std::size_t i = 0; i < host_cloud_.points.size (); ++i)
   {
     // if we already processed this point continue with the next one
     if (processed[i])
@@ -82,7 +100,7 @@ pcl::gpu::extractEuclideanClusters (const pcl::PointCloud<pcl::PointXYZ>::Ptr  &
     // Create the query queue on the host
 	pcl::PointCloud<pcl::PointXYZ>::VectorType queries_host;
     // Push the starting point in the vector
-    queries_host.push_back (host_cloud_->points[i]);
+    queries_host.push_back (host_cloud_.points[i]);
     // Clear vector
     r.indices.clear();
     // Push the starting point in
@@ -123,7 +141,7 @@ pcl::gpu::extractEuclideanClusters (const pcl::PointCloud<pcl::PointXYZ>::Ptr  &
           if(processed[data[i]])
             continue;
           processed[data[i]] = true;
-          queries_host.push_back (host_cloud_->points[data[i]]);
+          queries_host.push_back (host_cloud_.points[data[i]]);
           found_points++;
           r.indices.push_back(data[i]);
         }
@@ -134,7 +152,7 @@ pcl::gpu::extractEuclideanClusters (const pcl::PointCloud<pcl::PointXYZ>::Ptr  &
       {
         std::cout << " GPU: ";
         // Copy buffer
-        queries_device = DeviceArray<PointXYZ>(queries_device_buffer.ptr(),queries_host.size());
+        queries_device = pcl::gpu::DeviceArray<PointXYZ>(queries_device_buffer.ptr(),queries_host.size());
         // Move queries to GPU
         queries_device.upload(queries_host);
         // Execute search
@@ -153,7 +171,7 @@ pcl::gpu::extractEuclideanClusters (const pcl::PointCloud<pcl::PointXYZ>::Ptr  &
             if(processed[data[qp_r + qp * max_answers]])
               continue;
             processed[data[qp_r + qp * max_answers]] = true;
-            queries_host.push_back (host_cloud_->points[data[qp_r + qp * max_answers]]);
+            queries_host.push_back (host_cloud_.points[data[qp_r + qp * max_answers]]);
             found_points++;
             r.indices.push_back(data[qp_r + qp * max_answers]);
           }
@@ -170,13 +188,13 @@ pcl::gpu::extractEuclideanClusters (const pcl::PointCloud<pcl::PointXYZ>::Ptr  &
       // @todo: check if the following is actually still needed
       //r.indices.erase (std::unique (r.indices.begin (), r.indices.end ()), r.indices.end ());
 
-      r.header = host_cloud_->header;
+      r.header = host_cloud_.header;
       clusters.push_back (r);   // We could avoid a copy by working directly in the vector
     }
   }
 }
 
-void 
+void
 pcl::gpu::EuclideanClusterExtraction::extract (std::vector<pcl::PointIndices> &clusters)
 {
 /*
@@ -200,7 +218,7 @@ pcl::gpu::EuclideanClusterExtraction::extract (std::vector<pcl::PointIndices> &c
   }
 */
   // Extract the actual clusters
-  extractEuclideanClusters (host_cloud_, tree_, cluster_tolerance_, clusters, min_pts_per_cluster_, max_pts_per_cluster_);
+//  extractEuclideanClusters (host_cloud_, tree_, cluster_tolerance_, clusters, min_pts_per_cluster_, max_pts_per_cluster_);
   std::cout << "INFO: end of extractEuclideanClusters " << std::endl;
   // Sort the clusters based on their size (largest one first)
   //std::sort (clusters.rbegin (), clusters.rend (), comparePointClusters);

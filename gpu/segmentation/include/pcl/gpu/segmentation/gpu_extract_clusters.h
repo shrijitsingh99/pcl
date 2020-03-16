@@ -43,20 +43,32 @@
 #include <pcl/point_cloud.h>
 #include <pcl/PointIndices.h>
 #include <pcl/pcl_macros.h>
+#include <pcl/common/executor.h>
 #include <pcl/gpu/octree/octree.hpp>
 #include <pcl/gpu/containers/device_array.h>
 
 namespace pcl
 {
-  namespace gpu
-  {
-    void
-    extractEuclideanClusters (const pcl::PointCloud<pcl::PointXYZ>::Ptr &host_cloud_,
-                              const pcl::gpu::Octree::Ptr               &tree,
+
+    template <typename PointT> void
+    extractEuclideanClusters (pcl::executor::gpu,
+                              const typename pcl::PointCloud<PointT> &host_cloud_,
                               float                                     tolerance,
                               std::vector<PointIndices>                 &clusters,
                               unsigned int                              min_pts_per_cluster,
                               unsigned int                              max_pts_per_cluster);
+
+    template <> void
+    extractEuclideanClusters<pcl::PointXYZ> (pcl::executor::gpu,
+                              const pcl::PointCloud<pcl::PointXYZ> &host_cloud_,
+                              float                                     tolerance,
+                              std::vector<PointIndices>                 &clusters,
+                              unsigned int                              min_pts_per_cluster,
+                              unsigned int                              max_pts_per_cluster);
+
+  namespace gpu
+  {
+
 
    /** \brief @b EuclideanClusterExtraction represents a segmentation class for cluster extraction in an Euclidean sense, depending on pcl::gpu::octree
     * \author Koen Buys, Radu Bogdan Rusu
