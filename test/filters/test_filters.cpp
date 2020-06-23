@@ -274,6 +274,25 @@ TEST (ExtractIndices, Filters)
   */
 }
 
+TEST (PassThrough, Executor)
+{
+    PointCloud<PointXYZ> output;
+    PassThrough<PointXYZ> pt;
+    std::vector<int> indices;
+    pt.setInputCloud (cloud);
+    pt.setFilterFieldName ("z");
+    pt.setFilterLimits (0.05f, 0.1f);
+    pt.filter (inline_executor<oneway_t, single_t, blocking_t::always_t>{}, indices);
+
+    EXPECT_EQ (int (indices.size()), 42);
+
+    indices.clear();
+    pt.filter (sse_executor<oneway_t, single_t, blocking_t::always_t>{}, indices);
+
+    EXPECT_EQ (int (indices.size()), 42);
+
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TEST (PassThrough, Filters)
 {

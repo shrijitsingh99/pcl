@@ -613,7 +613,7 @@ namespace pcl
         * \param extract_removed_indices extract filtered indices from indices vector
         */
       ConditionalRemoval (int extract_removed_indices = false) :
-        Filter<PointT>::Filter (extract_removed_indices), capable_ (false), keep_organized_ (false), condition_ (),
+        Filter<PointT> (extract_removed_indices), capable_ (false), keep_organized_ (false), condition_ (),
         user_filter_value_ (std::numeric_limits<float>::quiet_NaN ())
       {
         filter_name_ = "ConditionalRemoval";

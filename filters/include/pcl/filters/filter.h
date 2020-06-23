@@ -79,12 +79,14 @@ namespace pcl
     * \author Radu B. Rusu
     * \ingroup filters
     */
-  template<typename PointT>
-  class Filter : public PCLBase<PointT>
+  template<typename PointT, typename DerivedFilter = void>
+  class FilterExecutor : public PCLBase<PointT>
   {
+    using FilterExecutorType = FilterExecutor<PointT, DerivedFilter>;
+
     public:
-      using Ptr = shared_ptr<Filter<PointT> >;
-      using ConstPtr = shared_ptr<const Filter<PointT> >;
+      using Ptr = shared_ptr<FilterExecutorType >;
+      using ConstPtr = shared_ptr<const FilterExecutorType >;
 
 
       using PointCloud = pcl::PointCloud<PointT>;
@@ -95,7 +97,7 @@ namespace pcl
         * \param[in] extract_removed_indices set to true if the filtered data indices should be saved in a
         * separate list. Default: false.
         */
-      Filter (bool extract_removed_indices = false) :
+      FilterExecutor (bool extract_removed_indices = false) :
         removed_indices_ (new std::vector<int>),
         extract_removed_indices_ (extract_removed_indices)
       {
@@ -180,13 +182,16 @@ namespace pcl
       }
   };
 
+  template <typename PointT>
+  using Filter = FilterExecutor<PointT>;
+
   ////////////////////////////////////////////////////////////////////////////////////////////
   /** \brief Filter represents the base filter class. All filters must inherit from this interface.
     * \author Radu B. Rusu
     * \ingroup filters
     */
   template<>
-  class PCL_EXPORTS Filter<pcl::PCLPointCloud2> : public PCLBase<pcl::PCLPointCloud2>
+  class PCL_EXPORTS FilterExecutor<pcl::PCLPointCloud2> : public PCLBase<pcl::PCLPointCloud2>
   {
     public:
       using Ptr = shared_ptr<Filter<pcl::PCLPointCloud2> >;
@@ -200,7 +205,7 @@ namespace pcl
         * \param[in] extract_removed_indices set to true if the filtered data indices should be saved in a
         * separate list. Default: false.
         */
-      Filter (bool extract_removed_indices = false) :
+      FilterExecutor (bool extract_removed_indices = false) :
         removed_indices_ (new std::vector<int>),
         extract_removed_indices_ (extract_removed_indices)
       {

@@ -83,7 +83,7 @@ namespace pcl
         * \param[in] extract_removed_indices Set to true if you want to be able to extract the indices of points being removed (default = false).
         */
       ExtractIndices (bool extract_removed_indices = false) :
-        FilterIndices<PointT>::FilterIndices (extract_removed_indices)
+          FilterIndices<PointT> (extract_removed_indices)
       {
         use_indices_ = true;
         filter_name_ = "ExtractIndices";
@@ -104,8 +104,8 @@ namespace pcl
       using PCLBase<PointT>::input_;
       using PCLBase<PointT>::indices_;
       using PCLBase<PointT>::use_indices_;
-      using Filter<PointT>::filter_name_;
-      using Filter<PointT>::getClassName;
+      using FilterExecutor<PointT, FilterIndices<PointT>>::filter_name_;
+      using FilterExecutor<PointT, FilterIndices<PointT>>::getClassName;
       using FilterIndices<PointT>::negative_;
       using FilterIndices<PointT>::keep_organized_;
       using FilterIndices<PointT>::user_filter_value_;
