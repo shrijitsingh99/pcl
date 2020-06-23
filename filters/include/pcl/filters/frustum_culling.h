@@ -87,7 +87,7 @@ namespace pcl
       using ConstPtr = shared_ptr<const FrustumCulling<PointT> >;
 
 
-      using Filter<PointT>::getClassName;
+      using FilterExecutor<PointT, FilterIndices<PointT>>::getClassName;
 
       FrustumCulling (bool extract_removed_indices = false) 
         : FilterIndices<PointT> (extract_removed_indices)
@@ -198,7 +198,7 @@ namespace pcl
     protected:
       using PCLBase<PointT>::input_;
       using PCLBase<PointT>::indices_;
-      using Filter<PointT>::filter_name_;
+      using FilterExecutor<PointT, FilterIndices<PointT>>::filter_name_;
       using FilterIndices<PointT>::negative_;
       using FilterIndices<PointT>::keep_organized_;
       using FilterIndices<PointT>::user_filter_value_;
