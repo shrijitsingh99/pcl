@@ -202,7 +202,7 @@ namespace pcl
       /** \brief Empty constructor, sets default convergence parameters
         */
       NormalRefinement () :
-        Filter<NormalT>::Filter ()
+        Filter<NormalT> ()
       {
         filter_name_ = "NormalRefinement";
         setMaxIterations (15);
@@ -214,7 +214,7 @@ namespace pcl
        * @param k_sqr_distances squared distances to the neighboring points
        */
       NormalRefinement (const std::vector< std::vector<int> >& k_indices, const std::vector< std::vector<float> >& k_sqr_distances) :
-        Filter<NormalT>::Filter ()
+        Filter<NormalT> ()
       {
         filter_name_ = "NormalRefinement";
         setCorrespondences (k_indices, k_sqr_distances);

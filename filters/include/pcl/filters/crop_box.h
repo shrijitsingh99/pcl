@@ -55,7 +55,7 @@ namespace pcl
   template<typename PointT>
   class CropBox : public FilterIndices<PointT>
   {
-    using Filter<PointT>::getClassName;
+    using FilterExecutor<PointT, FilterIndices<PointT>>::getClassName;
 
     using PointCloud = typename Filter<PointT>::PointCloud;
     using PointCloudPtr = typename PointCloud::Ptr;
@@ -167,7 +167,7 @@ namespace pcl
     protected:
       using PCLBase<PointT>::input_;
       using PCLBase<PointT>::indices_;
-      using Filter<PointT>::filter_name_;
+      using FilterExecutor<PointT, FilterIndices<PointT>>::filter_name_;
       using FilterIndices<PointT>::negative_;
       using FilterIndices<PointT>::keep_organized_;
       using FilterIndices<PointT>::user_filter_value_;
@@ -214,7 +214,7 @@ namespace pcl
         * \param[in] extract_removed_indices Set to true if you want to be able to extract the indices of points being removed (default = false).
         */
        CropBox (bool extract_removed_indices = false) :
-        FilterIndices<pcl::PCLPointCloud2>::FilterIndices (extract_removed_indices),
+        FilterIndices<pcl::PCLPointCloud2> (extract_removed_indices),
         min_pt_(Eigen::Vector4f (-1, -1, -1, 1)),
         max_pt_(Eigen::Vector4f (1, 1, 1, 1)),
         translation_ (Eigen::Vector3f::Zero ()),

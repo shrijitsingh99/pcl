@@ -70,29 +70,32 @@ namespace pcl
     * \author Justin Rosen
     * \ingroup filters
     */
-  template<typename PointT>
-  class FilterIndices : public Filter<PointT>
+  template<typename PointT, typename DerivedFilter = void>
+  class FilterIndicesExecutor : public FilterExecutor<PointT, FilterIndicesExecutor<PointT, DerivedFilter>>
   {
     public:
-      using Filter<PointT>::extract_removed_indices_;
+      using FilterIndicesType = FilterIndicesExecutor<PointT, DerivedFilter>;
+      using FilterType = FilterExecutor<PointT, FilterIndicesType>;
+
+      using FilterType::extract_removed_indices_;
       using PointCloud = pcl::PointCloud<PointT>;
 
-      using Ptr = shared_ptr<FilterIndices<PointT> >;
-      using ConstPtr = shared_ptr<const FilterIndices<PointT> >;
+      using Ptr = shared_ptr<FilterIndicesType >;
+      using ConstPtr = shared_ptr<const FilterIndicesType >;
 
 
       /** \brief Constructor.
         * \param[in] extract_removed_indices Set to true if you want to be able to extract the indices of points being removed (default = false).
         */
-      FilterIndices (bool extract_removed_indices = false) :
-          Filter<PointT> (extract_removed_indices),
+      FilterIndicesExecutor (bool extract_removed_indices = false) :
+          FilterType (extract_removed_indices),
           negative_ (false),
           keep_organized_ (false),
           user_filter_value_ (std::numeric_limits<float>::quiet_NaN ())
       {
       }
 
-      using Filter<PointT>::filter;
+      using FilterType::filter;
 
       /** \brief Calls the filtering method and returns the filtered point cloud indices.
         * \param[out] indices the resultant filtered point cloud indices
@@ -104,7 +107,20 @@ namespace pcl
           return;
 
         // Apply the actual filter
-        applyFilter (indices);
+        applyFilter(indices);
+
+        deinitCompute ();
+      }
+
+      template <typename Executor>
+      typename std::enable_if_t<!(std::is_same<DerivedFilter, void>::value)>
+      filter (Executor &&exec, std::vector<int> &indices)
+      {
+        if (!initCompute ())
+          return;
+
+        // Apply the actual filter
+        static_cast<DerivedFilter&>(*this).applyFilter(std::forward<Executor>(exec), indices);
 
         deinitCompute ();
       }
@@ -159,10 +175,10 @@ namespace pcl
 
     protected:
 
-      using Filter<PointT>::initCompute;
-      using Filter<PointT>::deinitCompute;
-      using Filter<PointT>::input_;
-      using Filter<PointT>::removed_indices_;
+      using FilterType::initCompute;
+      using FilterType::deinitCompute;
+      using FilterType::input_;
+      using FilterType::removed_indices_;
 
       /** \brief False = normal filter behavior (default), true = inverted behavior. */
       bool negative_;
@@ -182,6 +198,9 @@ namespace pcl
       applyFilter (PointCloud &output) override;
   };
 
+  template <typename PointT>
+  using FilterIndices = FilterIndicesExecutor<PointT>;
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /** \brief @b FilterIndices represents the base class for filters that are about binary point removal.
     * <br>
@@ -193,7 +212,7 @@ namespace pcl
     * \ingroup filters
     */
   template<>
-  class PCL_EXPORTS FilterIndices<pcl::PCLPointCloud2> : public Filter<pcl::PCLPointCloud2>
+  class PCL_EXPORTS FilterIndicesExecutor<pcl::PCLPointCloud2> : public Filter<pcl::PCLPointCloud2>
   {
     public:
       using PCLPointCloud2 = pcl::PCLPointCloud2;
@@ -201,7 +220,7 @@ namespace pcl
       /** \brief Constructor.
         * \param[in] extract_removed_indices Set to true if you want to extract the indices of points being removed (default = false).
         */
-      FilterIndices (bool extract_removed_indices = false) :
+      FilterIndicesExecutor (bool extract_removed_indices = false) :
           Filter<PCLPointCloud2> (extract_removed_indices),
           negative_ (false), 
           keep_organized_ (false), 

@@ -141,8 +141,8 @@ namespace pcl
     protected:
       using PCLBase<PointT>::input_;
       using PCLBase<PointT>::indices_;
-      using Filter<PointT>::filter_name_;
-      using Filter<PointT>::getClassName;
+      using FilterExecutor<PointT, FilterIndices<PointT>>::filter_name_;
+      using FilterExecutor<PointT, FilterIndices<PointT>>::getClassName;
       using FilterIndices<PointT>::negative_;
       using FilterIndices<PointT>::keep_organized_;
       using FilterIndices<PointT>::user_filter_value_;
@@ -201,7 +201,7 @@ namespace pcl
     public:
       /** \brief Empty constructor. */
       RadiusOutlierRemoval (bool extract_removed_indices = false) :
-        FilterIndices<pcl::PCLPointCloud2>::FilterIndices (extract_removed_indices),
+          FilterIndices<pcl::PCLPointCloud2> (extract_removed_indices),
         search_radius_ (0.0), min_pts_radius_ (1)
       {
         filter_name_ = "RadiusOutlierRemoval";

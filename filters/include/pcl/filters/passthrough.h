@@ -40,6 +40,7 @@
 #pragma once
 
 #include <pcl/pcl_macros.h>
+#include <pcl/experimental/execution/executor.hpp>
 #include <pcl/filters/filter_indices.h>
 
 namespace pcl
@@ -77,8 +78,10 @@ namespace pcl
     * \ingroup filters
     */
   template <typename PointT>
-  class PassThrough : public FilterIndices<PointT>
+  class PassThrough : public FilterIndicesExecutor<PointT, PassThrough<PointT>>
   {
+    using FilterIndicesType = FilterIndicesExecutor<PointT, PassThrough<PointT>>;
+
     protected:
       using PointCloud = typename FilterIndices<PointT>::PointCloud;
       using PointCloudPtr = typename PointCloud::Ptr;
@@ -95,7 +98,7 @@ namespace pcl
         * \param[in] extract_removed_indices Set to true if you want to be able to extract the indices of points being removed (default = false).
         */
       PassThrough (bool extract_removed_indices = false) :
-        FilterIndices<PointT> (extract_removed_indices),
+        FilterIndicesType (extract_removed_indices),
         filter_field_name_ (""),
         filter_limit_min_ (FLT_MIN),
         filter_limit_max_ (FLT_MAX)
@@ -178,16 +181,23 @@ namespace pcl
         return (negative_);
       }
 
+      template <typename Executor>
+      void
+      applyFilter (Executor &&exec, std::vector<int> &indices)
+      {
+          applyFilterIndices (std::forward<Executor>(exec), indices);
+      }
+
     protected:
       using PCLBase<PointT>::input_;
       using PCLBase<PointT>::indices_;
-      using Filter<PointT>::filter_name_;
-      using Filter<PointT>::getClassName;
-      using FilterIndices<PointT>::negative_;
-      using FilterIndices<PointT>::keep_organized_;
-      using FilterIndices<PointT>::user_filter_value_;
-      using FilterIndices<PointT>::extract_removed_indices_;
-      using FilterIndices<PointT>::removed_indices_;
+      using FilterExecutor<PointT, FilterIndicesExecutor<PointT, PassThrough<PointT>>>::filter_name_;
+      using FilterExecutor<PointT, FilterIndicesExecutor<PointT, PassThrough<PointT>>>::getClassName;
+      using FilterIndicesType::negative_;
+      using FilterIndicesType::keep_organized_;
+      using FilterIndicesType::user_filter_value_;
+      using FilterIndicesType::extract_removed_indices_;
+      using FilterIndicesType::removed_indices_;
 
       /** \brief Filtered results are indexed by an indices array.
         * \param[out] indices The resultant indices.
@@ -195,14 +205,15 @@ namespace pcl
       void
       applyFilter (std::vector<int> &indices) override
       {
-        applyFilterIndices (indices);
+        applyFilterIndices (best_fit{}, indices);
       }
 
       /** \brief Filtered results are indexed by an indices array.
         * \param[out] indices The resultant indices.
         */
+      template <typename Executor>
       void
-      applyFilterIndices (std::vector<int> &indices);
+      applyFilterIndices (Executor&& exec, std::vector<int> &indices);
 
     private:
       /** \brief The name of the field that will be used for filtering. */
@@ -234,7 +245,7 @@ namespace pcl
     public:
       /** \brief Constructor. */
       PassThrough (bool extract_removed_indices = false) :
-        FilterIndices<pcl::PCLPointCloud2>::FilterIndices (extract_removed_indices),
+          FilterIndicesExecutor<pcl::PCLPointCloud2>::FilterIndicesExecutor (extract_removed_indices),
         filter_field_name_ (""), filter_limit_min_ (-FLT_MAX), filter_limit_max_ (FLT_MAX)
       {
         filter_name_ = "PassThrough";

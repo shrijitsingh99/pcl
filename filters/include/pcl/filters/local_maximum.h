@@ -66,7 +66,7 @@ namespace pcl
     public:
       /** \brief Empty constructor. */
       LocalMaximum (bool extract_removed_indices = false) :
-        FilterIndices<PointT>::FilterIndices (extract_removed_indices),
+          FilterIndices<PointT> (extract_removed_indices),
         searcher_ (),
         radius_ (1)
       {
@@ -88,8 +88,8 @@ namespace pcl
     protected:
       using PCLBase<PointT>::input_;
       using PCLBase<PointT>::indices_;
-      using Filter<PointT>::filter_name_;
-      using Filter<PointT>::getClassName;
+      using FilterExecutor<PointT, FilterIndices<PointT>>::filter_name_;
+      using FilterExecutor<PointT, FilterIndices<PointT>>::getClassName;
       using FilterIndices<PointT>::negative_;
       using FilterIndices<PointT>::extract_removed_indices_;
       using FilterIndices<PointT>::removed_indices_;
