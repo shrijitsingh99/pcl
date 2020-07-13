@@ -45,6 +45,13 @@
 
 namespace pcl
 {
+  template <typename PointT, typename FunctorT> void
+  extractEuclideanClusters (
+      const PointCloud<PointT> &cloud, const Indices &indices,
+      FunctorT filter, const typename search::Search<PointT>::Ptr &tree,
+      float tolerance, std::vector<PointIndices> &clusters,
+      unsigned int min_pts_per_cluster = 1, unsigned int max_pts_per_cluster = std::numeric_limits<int>::max());
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /** \brief Decompose a region of space into clusters based on the Euclidean distance between points
     * \param cloud the point cloud message
@@ -56,7 +63,7 @@ namespace pcl
     * \param max_pts_per_cluster maximum number of points that a cluster may contain (default: max int)
     * \ingroup segmentation
     */
-  template <typename PointT> void 
+  template <typename PointT> void
   extractEuclideanClusters (
       const PointCloud<PointT> &cloud, const typename search::Search<PointT>::Ptr &tree,
       float tolerance, std::vector<PointIndices> &clusters,
@@ -76,7 +83,7 @@ namespace pcl
     */
   template <typename PointT> void 
   extractEuclideanClusters (
-      const PointCloud<PointT> &cloud, const std::vector<int> &indices,
+      const PointCloud<PointT> &cloud, const Indices &indices,
       const typename search::Search<PointT>::Ptr &tree, float tolerance, std::vector<PointIndices> &clusters,
       unsigned int min_pts_per_cluster = 1, unsigned int max_pts_per_cluster = (std::numeric_limits<int>::max) ());
 
@@ -102,79 +109,24 @@ namespace pcl
       unsigned int min_pts_per_cluster = 1,
       unsigned int max_pts_per_cluster = (std::numeric_limits<int>::max) ())
   {
-    if (tree->getInputCloud ()->points.size () != cloud.points.size ())
-    {
-      PCL_ERROR ("[pcl::extractEuclideanClusters] Tree built for a different point cloud dataset (%lu) than the input cloud (%lu)!\n", tree->getInputCloud ()->points.size (), cloud.points.size ());
-      return;
-    }
     if (cloud.points.size () != normals.points.size ())
     {
       PCL_ERROR ("[pcl::extractEuclideanClusters] Number of points in the input point cloud (%lu) different than normals (%lu)!\n", cloud.points.size (), normals.points.size ());
       return;
     }
 
-    // Create a bool vector of processed point indices, and initialize it to false
-    std::vector<bool> processed (cloud.points.size (), false);
+    auto lambda = [&](int i, int j, const Indices& nn_indices) -> bool {
+      //processed[nn_indices[j]] = true;
+      // [-1;1]
+      double dot_p = normals[i].normal[0] * normals[nn_indices[j]].normal[0] +
+                     normals[i].normal[1] * normals[nn_indices[j]].normal[1] +
+                     normals[i].normal[2] * normals[nn_indices[j]].normal[2];
+      return std::acos (std::abs (dot_p)) < eps_angle;
+    };
 
-    std::vector<int> nn_indices;
-    std::vector<float> nn_distances;
-    // Process all points in the indices vector
-    for (std::size_t i = 0; i < cloud.points.size (); ++i)
-    {
-      if (processed[i])
-        continue;
+    std::vector<Indices> indices;
 
-      std::vector<unsigned int> seed_queue;
-      int sq_idx = 0;
-      seed_queue.push_back (static_cast<int> (i));
-
-      processed[i] = true;
-
-      while (sq_idx < static_cast<int> (seed_queue.size ()))
-      {
-        // Search for sq_idx
-        if (!tree->radiusSearch (seed_queue[sq_idx], tolerance, nn_indices, nn_distances))
-        {
-          sq_idx++;
-          continue;
-        }
-
-        for (std::size_t j = 1; j < nn_indices.size (); ++j)             // nn_indices[0] should be sq_idx
-        {
-          if (processed[nn_indices[j]])                         // Has this point been processed before ?
-            continue;
-
-          //processed[nn_indices[j]] = true;
-          // [-1;1]
-          double dot_p = normals.points[i].normal[0] * normals.points[nn_indices[j]].normal[0] +
-                         normals.points[i].normal[1] * normals.points[nn_indices[j]].normal[1] +
-                         normals.points[i].normal[2] * normals.points[nn_indices[j]].normal[2];
-          if ( std::acos (std::abs (dot_p)) < eps_angle )
-          {
-            processed[nn_indices[j]] = true;
-            seed_queue.push_back (nn_indices[j]);
-          }
-        }
-
-        sq_idx++;
-      }
-
-      // If this queue is satisfactory, add to the clusters
-      if (seed_queue.size () >= min_pts_per_cluster && seed_queue.size () <= max_pts_per_cluster)
-      {
-        pcl::PointIndices r;
-        r.indices.resize (seed_queue.size ());
-        for (std::size_t j = 0; j < seed_queue.size (); ++j)
-          r.indices[j] = seed_queue[j];
-
-        // These two lines should not be needed: (can anyone confirm?) -FF
-        std::sort (r.indices.begin (), r.indices.end ());
-        r.indices.erase (std::unique (r.indices.begin (), r.indices.end ()), r.indices.end ());
-
-        r.header = cloud.header;
-        clusters.push_back (r);   // We could avoid a copy by working directly in the vector
-      }
-    }
+    pcl::extractEuclideanClusters(cloud, indices, lambda, tree, tolerance, clusters, min_pts_per_cluster, max_pts_per_cluster);
   }
 
 
@@ -196,91 +148,34 @@ namespace pcl
   template <typename PointT, typename Normal> 
   void extractEuclideanClusters (
       const PointCloud<PointT> &cloud, const PointCloud<Normal> &normals,
-      const std::vector<int> &indices, const typename KdTree<PointT>::Ptr &tree,
+      const Indices &indices, const typename KdTree<PointT>::Ptr &tree,
       float tolerance, std::vector<PointIndices> &clusters, double eps_angle,
       unsigned int min_pts_per_cluster = 1,
       unsigned int max_pts_per_cluster = (std::numeric_limits<int>::max) ())
   {
-    // \note If the tree was created over <cloud, indices>, we guarantee a 1-1 mapping between what the tree returns
-    //and indices[i]
-    if (tree->getInputCloud ()->points.size () != cloud.points.size ())
-    {
-      PCL_ERROR ("[pcl::extractEuclideanClusters] Tree built for a different point cloud dataset (%lu) than the input cloud (%lu)!\n", tree->getInputCloud ()->points.size (), cloud.points.size ());
-      return;
-    }
-    if (tree->getIndices ()->size () != indices.size ())
-    {
-      PCL_ERROR ("[pcl::extractEuclideanClusters] Tree built for a different set of indices (%lu) than the input set (%lu)!\n", tree->getIndices ()->size (), indices.size ());
-      return;
-    }
     if (cloud.points.size () != normals.points.size ())
     {
       PCL_ERROR ("[pcl::extractEuclideanClusters] Number of points in the input point cloud (%lu) different than normals (%lu)!\n", cloud.points.size (), normals.points.size ());
       return;
     }
+
+    if (indices.empty())
+      return;
+
     // Create a bool vector of processed point indices, and initialize it to false
     std::vector<bool> processed (cloud.points.size (), false);
 
-    std::vector<int> nn_indices;
-    std::vector<float> nn_distances;
-    // Process all points in the indices vector
-    for (std::size_t i = 0; i < indices.size (); ++i)
-    {
-      if (processed[indices[i]])
-        continue;
+    auto lambda = [&](int &i, int &j, Indices& nn_indices) -> bool {
+      //processed[nn_indices[j]] = true;
+      // [-1;1]
+      double dot_p =
+          normals[indices[i]].normal[0] * normals[indices[nn_indices[j]]].normal[0] +
+          normals[indices[i]].normal[1] * normals[indices[nn_indices[j]]].normal[1] +
+          normals[indices[i]].normal[2] * normals[indices[nn_indices[j]]].normal[2];
+      return std::acos (std::abs (dot_p)) < eps_angle;
+    };
 
-      std::vector<int> seed_queue;
-      int sq_idx = 0;
-      seed_queue.push_back (indices[i]);
-
-      processed[indices[i]] = true;
-
-      while (sq_idx < static_cast<int> (seed_queue.size ()))
-      {
-        // Search for sq_idx
-        if (!tree->radiusSearch (cloud.points[seed_queue[sq_idx]], tolerance, nn_indices, nn_distances))
-        {
-          sq_idx++;
-          continue;
-        }
-
-        for (std::size_t j = 1; j < nn_indices.size (); ++j)             // nn_indices[0] should be sq_idx
-        {
-          if (processed[nn_indices[j]])                             // Has this point been processed before ?
-            continue;
-
-          //processed[nn_indices[j]] = true;
-          // [-1;1]
-          double dot_p =
-            normals.points[indices[i]].normal[0] * normals.points[indices[nn_indices[j]]].normal[0] +
-            normals.points[indices[i]].normal[1] * normals.points[indices[nn_indices[j]]].normal[1] +
-            normals.points[indices[i]].normal[2] * normals.points[indices[nn_indices[j]]].normal[2];
-          if ( std::acos (std::abs (dot_p)) < eps_angle )
-          {
-            processed[nn_indices[j]] = true;
-            seed_queue.push_back (nn_indices[j]);
-          }
-        }
-
-        sq_idx++;
-      }
-
-      // If this queue is satisfactory, add to the clusters
-      if (seed_queue.size () >= min_pts_per_cluster && seed_queue.size () <= max_pts_per_cluster)
-      {
-        pcl::PointIndices r;
-        r.indices.resize (seed_queue.size ());
-        for (std::size_t j = 0; j < seed_queue.size (); ++j)
-          r.indices[j] = seed_queue[j];
-
-        // These two lines should not be needed: (can anyone confirm?) -FF
-        std::sort (r.indices.begin (), r.indices.end ());
-        r.indices.erase (std::unique (r.indices.begin (), r.indices.end ()), r.indices.end ());
-
-        r.header = cloud.header;
-        clusters.push_back (r);
-      }
-    }
+    pcl::extractEuclideanClusters(cloud, indices, lambda, tree, tolerance, clusters, min_pts_per_cluster, max_pts_per_cluster);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
