@@ -40,6 +40,7 @@
 #pragma once
 
 #include <pcl/common/transforms.h>
+#include <pcl/experimental/executor/executor.h>
 
 #if defined(__SSE2__)
 #include <xmmintrin.h>
@@ -61,21 +62,46 @@ namespace pcl
 namespace detail
 {
 
+using namespace executor;
+
+template <typename Scalar, typename Executor, typename = void>
+struct MatrixType {};
+
+template <typename Scalar, typename Executor>
+struct MatrixType<Scalar, Executor, std::enable_if_t<is_instance_of_base_v<inline_executor, Executor> && std::is_same<Scalar, float>::value>>{
+  using type = const Eigen::Matrix<Scalar, 4, 4>;
+};
+
+template <typename Scalar, typename Executor>
+struct MatrixType<Scalar, Executor, std::enable_if_t<is_instance_of_base_v<sse_executor, Executor> && std::is_same<Scalar, float>::value>>{
+  using type = __m128;
+};
+
 /** A helper struct to apply an SO3 or SE3 transform to a 3D point.
   * Supports single and double precision transform matrices. */
-template<typename Scalar>
+template<typename Scalar, typename Executor, typename TransfromMatrix = typename MatrixType<Scalar, Executor>::type>
 struct Transformer
 {
-  const Eigen::Matrix<Scalar, 4, 4>& tf;
+  TransfromMatrix tf;
 
   /** Construct a transformer object.
     * The transform matrix is captured by const reference. Make sure that it does not go out of scope before this
     * object does. */
-  Transformer (const Eigen::Matrix<Scalar, 4, 4>& transform) : tf (transform) { };
+
+  template <typename E = Executor>
+  Transformer(Executor &exec, TransfromMatrix &transform, typename std::enable_if_t<is_instance_of_base_v<inline_executor, E>, int> = 0) : tf(transform) {}
+
+  template <typename E = Executor>
+  Transformer(Executor &exec, TransfromMatrix &transform, typename std::enable_if_t<is_instance_of_base_v<sse_executor, E>, int> = 0) {
+    for (std::size_t i = 0; i < 4; ++i)
+      tf[i] = _mm_load_ps (transform.col(i).data());
+  }
 
   /** Apply SO3 transform (top-left corner of the transform matrix).
     * \param[in] src input 3D point (pointer to 3 floats)
     * \param[out] tgt output 3D point (pointer to 4 floats), can be the same as input. The fourth element is set to 0. */
+
+  template <typename E = Executor, typename std::enable_if_t<is_instance_of_base_v<inline_executor, E>, int> = 0>
   void so3 (const float* src, float* tgt) const
   {
     const Scalar p[3] = { src[0], src[1], src[2] };  // need this when src == tgt
@@ -85,9 +111,19 @@ struct Transformer
     tgt[3] = 0;
   }
 
+  template <typename E = Executor, typename std::enable_if_t<is_instance_of_base_v<sse_executor, E>, int> = 0>
+  void so3 (const float* src, float* tgt) const
+  {
+    __m128 p0 = _mm_mul_ps (_mm_load_ps1 (&src[0]), tf[0]);
+    __m128 p1 = _mm_mul_ps (_mm_load_ps1 (&src[1]), tf[1]);
+    __m128 p2 = _mm_mul_ps (_mm_load_ps1 (&src[2]), tf[2]);
+    _mm_store_ps (tgt, _mm_add_ps(p0, _mm_add_ps(p1, p2)));
+  }
+
   /** Apply SE3 transform.
     * \param[in] src input 3D point (pointer to 3 floats)
     * \param[out] tgt output 3D point (pointer to 4 floats), can be the same as input. The fourth element is set to 1. */
+  template <typename E = Executor, typename std::enable_if_t<is_instance_of_base_v<inline_executor, E>, int> = 0>
   void se3 (const float* src, float* tgt) const
   {
     const Scalar p[3] = { src[0], src[1], src[2] };  // need this when src == tgt
@@ -96,37 +132,14 @@ struct Transformer
     tgt[2] = static_cast<float> (tf (2, 0) * p[0] + tf (2, 1) * p[1] + tf (2, 2) * p[2] + tf (2, 3));
     tgt[3] = 1;
   }
-};
 
-#if defined(__SSE2__)
-
-/** Optimized version for single-precision transforms using SSE2 intrinsics. */
-template<>
-struct Transformer<float>
-{
-  /// Columns of the transform matrix stored in XMM registers.
-  __m128 c[4];
-
-  Transformer(const Eigen::Matrix4f& tf)
-  {
-    for (std::size_t i = 0; i < 4; ++i)
-      c[i] = _mm_load_ps (tf.col (i).data ());
-  }
-
-  void so3 (const float* src, float* tgt) const
-  {
-    __m128 p0 = _mm_mul_ps (_mm_load_ps1 (&src[0]), c[0]);
-    __m128 p1 = _mm_mul_ps (_mm_load_ps1 (&src[1]), c[1]);
-    __m128 p2 = _mm_mul_ps (_mm_load_ps1 (&src[2]), c[2]);
-    _mm_store_ps (tgt, _mm_add_ps(p0, _mm_add_ps(p1, p2)));
-  }
-
+  template <typename E = Executor, typename std::enable_if_t<is_instance_of_base_v<sse_executor, E>, int> = 0>
   void se3 (const float* src, float* tgt) const
   {
-    __m128 p0 = _mm_mul_ps (_mm_load_ps1 (&src[0]), c[0]);
-    __m128 p1 = _mm_mul_ps (_mm_load_ps1 (&src[1]), c[1]);
-    __m128 p2 = _mm_mul_ps (_mm_load_ps1 (&src[2]), c[2]);
-    _mm_store_ps (tgt, _mm_add_ps(p0, _mm_add_ps(p1, _mm_add_ps(p2, c[3]))));
+    __m128 p0 = _mm_mul_ps (_mm_load_ps1 (&src[0]), tf[0]);
+    __m128 p1 = _mm_mul_ps (_mm_load_ps1 (&src[1]), tf[1]);
+    __m128 p2 = _mm_mul_ps (_mm_load_ps1 (&src[2]), tf[2]);
+    _mm_store_ps (tgt, _mm_add_ps(p0, _mm_add_ps(p1, _mm_add_ps(p2, tf[3]))));
   }
 };
 
