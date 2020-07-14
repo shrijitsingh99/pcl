@@ -178,7 +178,7 @@ namespace pcl
         return (negative_);
       }
 
-    protected:
+    public:
       using PCLBase<PointT>::input_;
       using PCLBase<PointT>::indices_;
       using Filter<PointT>::filter_name_;

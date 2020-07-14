@@ -83,53 +83,68 @@ pcl::PassThrough<PointT>::applyFilterIndices (std::vector<int> &indices)
       return;
     }
 
-    // Filter for non-finite entries and the specified field limits
-    for (const auto ii : *indices_)  // ii = input index
-    {
-      // Non-finite entries are always passed to removed indices
-      if (!std::isfinite ((*input_)[ii].x) ||
-          !std::isfinite ((*input_)[ii].y) ||
-          !std::isfinite ((*input_)[ii].z))
+// Filter for non-finite entries and the specified field limits
+#pragma omp parallel for num_threads(4) shared(indices, oii, rii, fields) firstprivate(distance_idx)
+    for (int i = 0; i < indices_->size(); ++i) // ii = input index
       {
-        if (extract_removed_indices_)
-          (*removed_indices_)[rii++] = ii;
-        continue;
+        const auto ii = (*indices_)[i];
+        int rii_;
+          // Non-finite entries are always passed to removed indices
+        if (!std::isfinite((*input_)[ii].x) || !std::isfinite((*input_)[ii].y) ||
+            !std::isfinite((*input_)[ii].z)) {
+          if (extract_removed_indices_) {
+#pragma omp atomic capture
+            rii_ = ++rii;
+            (*removed_indices_)[rii_] = ii;
+          }
+        }
+
+          // Get the field's value
+          const std::uint8_t* pt_data =
+              reinterpret_cast<const std::uint8_t*>(&(*input_)[ii]);
+          float field_value = 0;
+          memcpy(&field_value, pt_data + fields[distance_idx].offset, sizeof(float));
+
+          // Remove NAN/INF/-INF values. We expect passthrough to output clean valid data.
+          if (!std::isfinite(field_value)) {
+            if (extract_removed_indices_) {
+#pragma omp atomic capture
+              rii_ = ++rii;
+              (*removed_indices_)[rii] = ii;
+            }
+            continue;
+          }
+
+          // Outside of the field limits are passed to removed indices
+          if (!negative_ &&
+              (field_value < filter_limit_min_ || field_value > filter_limit_max_)) {
+            if (extract_removed_indices_) {
+#pragma omp atomic capture
+              rii_ = ++rii;
+              (*removed_indices_)[rii] = ii;
+            }
+            continue;
+          }
+
+          // Inside of the field limits are passed to removed indices if negative was set
+          if (negative_ && field_value >= filter_limit_min_ &&
+              field_value <= filter_limit_max_) {
+            if (extract_removed_indices_) {
+#pragma omp atomic capture
+              rii_ = ++rii;
+              (*removed_indices_)[rii] = ii;
+              }
+            continue;
+          }
+            // Otherwise it was a normal point for output (inlier)
+#pragma omp atomic update
+          ++oii;
+#pragma omp atomic write
+          indices[oii] = ii;
       }
 
-      // Get the field's value
-      const std::uint8_t* pt_data = reinterpret_cast<const std::uint8_t*> (&(*input_)[ii]);
-      float field_value = 0;
-      memcpy (&field_value, pt_data + fields[distance_idx].offset, sizeof (float));
 
-      // Remove NAN/INF/-INF values. We expect passthrough to output clean valid data.
-      if (!std::isfinite (field_value))
-      {
-        if (extract_removed_indices_)
-          (*removed_indices_)[rii++] = ii;
-        continue;
-      }
-
-      // Outside of the field limits are passed to removed indices
-      if (!negative_ && (field_value < filter_limit_min_ || field_value > filter_limit_max_))
-      {
-        if (extract_removed_indices_)
-          (*removed_indices_)[rii++] = ii;
-        continue;
-      }
-
-      // Inside of the field limits are passed to removed indices if negative was set
-      if (negative_ && field_value >= filter_limit_min_ && field_value <= filter_limit_max_)
-      {
-        if (extract_removed_indices_)
-          (*removed_indices_)[rii++] = ii;
-        continue;
-      }
-
-      // Otherwise it was a normal point for output (inlier)
-      indices[oii++] = ii;
-    }
   }
-
   // Resize the output arrays
   indices.resize (oii);
   removed_indices_->resize (rii);
