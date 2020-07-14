@@ -54,18 +54,19 @@ namespace pcl
     * \author Radu Bogdan Rusu
     * \ingroup sample_consensus
     */
-  template <typename T>
+  template <typename T, typename Derived = void>
   class SampleConsensus
   {
     using SampleConsensusModelPtr = typename SampleConsensusModel<T>::Ptr;
+    using Self = SampleConsensus<T, Derived>;
 
     private:
       /** \brief Constructor for base SAC. */
       SampleConsensus () {};
 
     public:
-      using Ptr = shared_ptr<SampleConsensus<T> >;
-      using ConstPtr = shared_ptr<const SampleConsensus<T> >;
+      using Ptr = shared_ptr<Self>;
+      using ConstPtr = shared_ptr<const Self>;
 
 
       /** \brief Constructor for base SAC.

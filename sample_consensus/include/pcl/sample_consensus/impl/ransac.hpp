@@ -54,7 +54,32 @@
 
 //////////////////////////////////////////////////////////////////////////
 template <typename PointT> bool
-pcl::RandomSampleConsensus<PointT>::computeModel (int)
+pcl::RandomSampleConsensus<PointT>::computeModel (int debug_verbosity_level)
+{
+  if (executor::is_executor_available_v<executor::omp_executor>)
+    return computeModel(executor::omp_executor<>{}, debug_verbosity_level);
+  else
+    return computeModel(executor::inline_executor<>{}, debug_verbosity_level);
+}
+
+template <typename PointT>
+template <typename Executor, typename executor::instance_of_base<executor::omp_executor, Executor>>
+bool
+pcl::RandomSampleConsensus<PointT>::computeModel(const Executor& exec, int debug_verbosity_level) {
+  return compute(exec);
+}
+
+template <typename PointT>
+template <typename Executor, typename executor::instance_of_base<executor::inline_executor, Executor>>
+bool
+pcl::RandomSampleConsensus<PointT>::computeModel(const Executor& exec, int debug_verbosity_level) {
+  return compute(exec);
+}
+
+template <typename PointT>
+template <typename Executor>
+bool
+pcl::RandomSampleConsensus<PointT>::compute(const Executor &exec)
 {
   // Warn and exit if no threshold was set
   if (threshold_ == std::numeric_limits<double>::max())
@@ -78,34 +103,7 @@ pcl::RandomSampleConsensus<PointT>::computeModel (int)
   // suppress infinite loops by just allowing 10 x maximum allowed iterations for invalid model parameters!
   const unsigned max_skip = max_iterations_ * 10;
 
-  int threads = threads_;
-  if (threads >= 0)
-  {
-#if OPENMP_AVAILABLE_RANSAC
-    if (threads == 0)
-    {
-      threads = omp_get_num_procs();
-      PCL_DEBUG ("[pcl::RandomSampleConsensus::computeModel] Automatic number of threads requested, choosing %i threads.\n", threads);
-    }
-#else
-    // Parallelization desired, but not available
-    PCL_WARN ("[pcl::RandomSampleConsensus::computeModel] Parallelization is requested, but OpenMP 3.1 is not available! Continuing without parallelization.\n");
-    threads = -1;
-#endif
-  }
-
-#if OPENMP_AVAILABLE_RANSAC
-#pragma omp parallel if(threads > 0) num_threads(threads) shared(k, skipped_count, n_best_inliers_count) firstprivate(selection, model_coefficients) // would be nice to have a default(none)-clause here, but then some compilers complain about the shared const variables
-#endif
-  {
-#if OPENMP_AVAILABLE_RANSAC
-    if (omp_in_parallel())
-#pragma omp master
-      PCL_DEBUG ("[pcl::RandomSampleConsensus::computeModel] Computing in parallel with up to %i threads.\n", omp_get_num_threads());
-    else
-#endif
-      PCL_DEBUG ("[pcl::RandomSampleConsensus::computeModel] Computing not parallel.\n");
-
+  auto compute_iteratively = [&]() {
     // Iterate
     while (true) // infinite loop with four possible breaks
     {
@@ -200,7 +198,21 @@ pcl::RandomSampleConsensus<PointT>::computeModel (int)
         break;
       }
     } // while
-  } // omp parallel
+  };
+
+  int threads = threads_ == 0 ? omp_get_num_threads() : threads_;
+
+  if (executor::is_instance_of_base_v<executor::omp_executor, Executor>) {
+    exec.execute([&](){
+    #pragma omp parallel if(threads > 0) num_threads(threads) shared(k, skipped_count, n_best_inliers_count) firstprivate(selection, model_coefficients) // would be nice to have a default(none)-clause here, but then some compilers complain about the shared const variables
+      {
+        compute_iteratively();
+      } // omp parallel
+    });
+  } else {
+    exec.execute(compute_iteratively);
+  }
+
 
   PCL_DEBUG ("[pcl::RandomSampleConsensus::computeModel] Model: %lu size, %u inliers.\n", model_.size (), n_best_inliers_count);
 

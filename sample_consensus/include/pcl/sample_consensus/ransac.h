@@ -42,6 +42,7 @@
 
 #include <pcl/sample_consensus/sac.h>
 #include <pcl/sample_consensus/sac_model.h>
+#include <pcl/experimental/executor/executor.h>
 
 namespace pcl
 {
@@ -53,29 +54,31 @@ namespace pcl
     * \ingroup sample_consensus
     */
   template <typename PointT>
-  class RandomSampleConsensus : public SampleConsensus<PointT>
+  class RandomSampleConsensus : public SampleConsensus<PointT, RandomSampleConsensus<PointT>>
   {
     using SampleConsensusModelPtr = typename SampleConsensusModel<PointT>::Ptr;
+    using Self = RandomSampleConsensus<PointT>;
+    using Base = SampleConsensus<PointT, Self>;
 
     public:
       using Ptr = shared_ptr<RandomSampleConsensus<PointT> >;
       using ConstPtr = shared_ptr<const RandomSampleConsensus<PointT> >;
 
-      using SampleConsensus<PointT>::max_iterations_;
-      using SampleConsensus<PointT>::threshold_;
-      using SampleConsensus<PointT>::iterations_;
-      using SampleConsensus<PointT>::sac_model_;
-      using SampleConsensus<PointT>::model_;
-      using SampleConsensus<PointT>::model_coefficients_;
-      using SampleConsensus<PointT>::inliers_;
-      using SampleConsensus<PointT>::probability_;
-      using SampleConsensus<PointT>::threads_;
+      using Base::max_iterations_;
+      using Base::threshold_;
+      using Base::iterations_;
+      using Base::sac_model_;
+      using Base::model_;
+      using Base::model_coefficients_;
+      using Base::inliers_;
+      using Base::probability_;
+      using Base::threads_;
 
       /** \brief RANSAC (RAndom SAmple Consensus) main constructor
         * \param[in] model a Sample Consensus model
         */
       RandomSampleConsensus (const SampleConsensusModelPtr &model) 
-        : SampleConsensus<PointT> (model)
+        : Base (model)
       {
         // Maximum number of trials before we give up.
         max_iterations_ = 10000;
@@ -86,7 +89,7 @@ namespace pcl
         * \param[in] threshold distance to model threshold
         */
       RandomSampleConsensus (const SampleConsensusModelPtr &model, double threshold) 
-        : SampleConsensus<PointT> (model, threshold)
+        : Base (model, threshold)
       {
         // Maximum number of trials before we give up.
         max_iterations_ = 10000;
@@ -95,8 +98,19 @@ namespace pcl
       /** \brief Compute the actual model and find the inliers
         * \param[in] debug_verbosity_level enable/disable on-screen debug information and set the verbosity level
         */
-      bool 
+      bool
       computeModel (int debug_verbosity_level = 0) override;
+
+      template <typename Executor, typename executor::instance_of_base<executor::omp_executor, Executor> = 0>
+      bool
+      computeModel(const Executor& exec, int debug_verbosity_level = 0);
+
+      template <typename Executor, typename executor::instance_of_base<executor::inline_executor, Executor> = 0>
+      bool
+      computeModel(const Executor& exec, int debug_verbosity_level = 0);
+
+      template <typename Executor>
+      bool compute(const Executor &exec);
   };
 }
 
