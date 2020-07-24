@@ -11,6 +11,7 @@
 
 #include <pcl/filters/filter_indices.h>
 #include <pcl/type_traits.h> // for is_invocable
+#include <pcl/experimental/executor/executor.h>
 
 namespace pcl {
 template <typename PointT, typename Function>
@@ -25,8 +26,8 @@ constexpr static bool is_functor_for_filter_v =
  * \ingroup filters
  */
 template <typename PointT, typename Functor>
-class FunctorFilter : public FilterIndices<PointT> {
-  using Base = FilterIndices<PointT>;
+class FunctorFilter : public FilterIndicesExecutor<PointT, FunctorFilter<PointT, Functor>> {
+  using Base = FilterIndicesExecutor<PointT, FunctorFilter<PointT, Functor>>;
   using PCLBase = pcl::PCLBase<PointT>;
 
 public:
@@ -77,21 +78,39 @@ public:
   void
   applyFilter(Indices& indices) override
   {
+    applyFilter(executor::best_fit{}, indices);
+  }
+
+  template <typename Executor, typename std::enable_if_t<executor::is_instance_of_base_v<executor::inline_executor, Executor> || executor::is_instance_of_base_v<executor::omp_executor, Executor>, int> = 0>
+  void
+  applyFilter (Executor &&exec, Indices& indices)
+  {
     indices.clear();
-    indices.reserve(input_->size());
+    indices.reserve(indices_->size());
+    std::vector<int> keep(indices_->size(), 0);
+    std::vector<int> remove(indices_->size(), 0);
+
     if (extract_removed_indices_) {
       removed_indices_->clear();
-      removed_indices_->reserve(input_->size());
+      removed_indices_->reserve(indices_->size());
     }
 
-    for (const auto index : *indices_) {
-      // functor returns true for points that should be selected
-      if (negative_ != functor_(*input_, index)) {
-        indices.push_back(index);
-      }
-      else if (extract_removed_indices_) {
-        removed_indices_->push_back(index);
-      }
+    auto cond_filtering = [&](index_t idx) {
+      exec.execute([&]() {
+        if (negative_ != functor_(*input_, idx)) {
+          keep[idx] = true;
+        }
+        else if (extract_removed_indices_) {
+          remove[idx] = true;
+        }
+      });
+    };
+
+    exec.bulk_execute(cond_filtering, indices_->size());
+
+    for (index_t i = 0; i < keep.size(); ++i) {
+      if (keep[i]) indices.push_back((*indices_)[i]);
+      else if (remove[i]) removed_indices_->push_back((*indices_)[i]);
     }
   }
 };

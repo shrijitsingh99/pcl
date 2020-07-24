@@ -113,9 +113,10 @@ namespace pcl
       }
 
       template <typename Executor>
-      typename std::enable_if_t<!(std::is_same<DerivedFilter, void>::value)>
+      void
       filter (Executor &&exec, std::vector<int> &indices)
       {
+        static_assert(std::is_same<DerivedFilter, void>::value, "Error");
         if (!initCompute ())
           return;
 
