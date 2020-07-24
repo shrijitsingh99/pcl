@@ -40,7 +40,7 @@
 #pragma once
 
 #include <pcl/pcl_macros.h>
-#include <pcl/experimental/execution/executor.hpp>
+#include <pcl/experimental/executor/executor.h>
 #include <pcl/filters/filter_indices.h>
 
 namespace pcl
@@ -78,9 +78,9 @@ namespace pcl
     * \ingroup filters
     */
   template <typename PointT>
-  class PassThrough : public FilterIndicesExecutor<PointT, PassThrough<PointT>>
+  class PassThrough : public FilterIndices<PointT>
   {
-    using FilterIndicesType = FilterIndicesExecutor<PointT, PassThrough<PointT>>;
+    using FilterIndicesType = FilterIndices<PointT>;
 
     protected:
       using PointCloud = typename FilterIndices<PointT>::PointCloud;
@@ -205,15 +205,14 @@ namespace pcl
       void
       applyFilter (std::vector<int> &indices) override
       {
-        applyFilterIndices (best_fit{}, indices);
+        applyFilterIndices (executor::best_fit{}, indices);
       }
 
       /** \brief Filtered results are indexed by an indices array.
         * \param[out] indices The resultant indices.
         */
-      template <typename Executor>
       void
-      applyFilterIndices (Executor&& exec, std::vector<int> &indices);
+      applyFilterIndices (std::vector<int> &indices);
 
     private:
       /** \brief The name of the field that will be used for filtering. */
