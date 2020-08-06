@@ -191,8 +191,8 @@ namespace pcl
     protected:
       using PCLBase<PointT>::input_;
       using PCLBase<PointT>::indices_;
-      using FilterExecutor<PointT, FilterIndicesExecutor<PointT, PassThrough<PointT>>>::filter_name_;
-      using FilterExecutor<PointT, FilterIndicesExecutor<PointT, PassThrough<PointT>>>::getClassName;
+      using FilterExecutor<PointT, FilterIndicesExecutor<PointT, void>>::filter_name_;
+      using FilterExecutor<PointT, FilterIndicesExecutor<PointT, void>>::getClassName;
       using FilterIndicesType::negative_;
       using FilterIndicesType::keep_organized_;
       using FilterIndicesType::user_filter_value_;
@@ -205,7 +205,7 @@ namespace pcl
       void
       applyFilter (std::vector<int> &indices) override
       {
-        applyFilterIndices (executor::best_fit{}, indices);
+        applyFilterIndices (indices);
       }
 
       /** \brief Filtered results are indexed by an indices array.
