@@ -87,8 +87,7 @@ public:
   {
     indices.clear();
     indices.reserve(indices_->size());
-    std::vector<int> keep(indices_->size(), 0);
-    std::vector<int> remove(indices_->size(), 0);
+    std::vector<uint8_t> keep(indices_->size(), 0);
 
     if (extract_removed_indices_) {
       removed_indices_->clear();
@@ -100,9 +99,6 @@ public:
         if (negative_ != functor_(*input_, idx)) {
           keep[idx] = true;
         }
-        else if (extract_removed_indices_) {
-          remove[idx] = true;
-        }
       });
     };
 
@@ -110,7 +106,7 @@ public:
 
     for (index_t i = 0; i < keep.size(); ++i) {
       if (keep[i]) indices.push_back((*indices_)[i]);
-      else if (remove[i]) removed_indices_->push_back((*indices_)[i]);
+      else if (extract_removed_indices_) removed_indices_->push_back((*indices_)[i]);
     }
   }
 };
