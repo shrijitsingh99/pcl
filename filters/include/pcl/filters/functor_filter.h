@@ -87,7 +87,7 @@ public:
   {
     indices.clear();
     indices.reserve(indices_->size());
-    std::vector<uint8_t> keep(indices_->size(), 0);
+    std::vector<std::uint8_t> keep(indices_->size(), 0);
 
     if (extract_removed_indices_) {
       removed_indices_->clear();
