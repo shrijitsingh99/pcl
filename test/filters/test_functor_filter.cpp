@@ -95,6 +95,59 @@ INSTANTIATE_TEST_SUITE_P(RandomSeed,
                          FunctorFilterRandom,
                          testing::Values(123, 456, 789));
 
+
+template <typename T>
+class FunctorFilterExecutor : public ::testing::Test {
+public:
+  void
+  SetUp() override
+  {
+    cloud = make_shared<PointCloud<PointXYZ>>();
+
+    std::uint32_t seed = 123;
+    common::CloudGenerator<PointXYZ, common::UniformGenerator<float>> generator{
+        {-10., 0., seed}};
+    generator.fill(20, 20, negative_cloud);
+    generator.setParameters({0., 10., seed});
+    generator.fill(10, 10, positive_cloud);
+    *cloud = negative_cloud + positive_cloud;
+  }
+
+  shared_ptr<PointCloud<PointXYZ>> cloud;
+  PointCloud<PointXYZ> out_cloud, negative_cloud, positive_cloud;
+};
+
+using ExecutorTypes = ::testing::Types<executor::inline_executor<>, executor::omp_executor<>>;
+TYPED_TEST_SUITE(FunctorFilterExecutor, ExecutorTypes);
+
+TYPED_TEST(FunctorFilterExecutor, executors)
+{
+  const auto exec = TypeParam{};
+
+  const auto lambda = [](const PointCloud<PointXYZ>& cloud, index_t idx) {
+    const auto& pt = cloud[idx];
+    return (pt.getArray3fMap() < 0).all();
+  };
+
+  for (const auto& keep_removed : {true, false}) {
+    FunctorFilter<PointXYZ, decltype(lambda)> filter{lambda, keep_removed};
+    filter.setInputCloud(this->cloud);
+    const auto removed_size = filter.getRemovedIndices()->size();
+
+    filter.setNegative(false);
+    filter.filter(exec, this->out_cloud);
+
+    EXPECT_EQ(this->out_cloud.size(), this->negative_cloud.size());
+    if (keep_removed) {
+      EXPECT_EQ(filter.getRemovedIndices()->size(), this->positive_cloud.size());
+    }
+    else {
+      EXPECT_EQ(filter.getRemovedIndices()->size(), removed_size);
+    }
+  }
+}
+
+
 namespace type_test {
 int
 free_func(const PointCloud<PointXYZ>&, const index_t& idx)
