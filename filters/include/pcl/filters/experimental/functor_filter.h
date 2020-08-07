@@ -16,10 +16,7 @@ namespace pcl {
 namespace experimental {
 template <typename PointT, typename Function>
 constexpr static bool is_functor_for_filter_v =
-    pcl::is_invocable_r_v<bool,
-        Function,
-        const pcl::remove_cvref_t<pcl::PointCloud<PointT>>&,
-        pcl::index_t>;
+    pcl::is_invocable_r_v<bool, Function, const pcl::PointCloud<PointT>&, pcl::index_t>;
 
 /**
  * \brief Filter point clouds and indices based on a functor passed in the ctor
@@ -28,7 +25,7 @@ constexpr static bool is_functor_for_filter_v =
 template <typename PointT, typename Functor>
 class FunctorFilter : public FilterIndices<PointT, FunctorFilter<PointT, Functor>> {
   using Self = FunctorFilter<PointT, Functor>;
-  using Base = FilterIndices<PointT, FunctorFilter<PointT, Functor>>;
+  using Base = FilterIndices<PointT, Self>;
   using PCLBase = pcl::PCLBase<PointT>;
 
 public:
@@ -98,22 +95,21 @@ public:
 
     auto cond_filtering = [&](executor::executor_index_t<Executor> index) {
       pcl::utils::ignore(index);
-      #pragma omp for
-      for (index_t idx = 0; idx < indices_->size(); ++idx) {
-        exec.execute([&]() {
-          if (negative_ != functor_(*input_, idx)) {
-            keep[idx] = true;
-          }
-        });
+#pragma omp for
+      for (std::ptrdiff_t idx = 0; idx < indices_->size(); ++idx) {
+        if (negative_ != functor_(*input_, idx)) {
+          keep[idx] = true;
+        }
       }
     };
 
     exec.bulk_execute(cond_filtering, 0);
-    merge_indices(exec, indices, keep);
+    extractMarkedIndices(exec, indices, keep);
   }
 
+private:
   template <typename Executor, typename executor::instance_of_base<Executor, executor::inline_executor, executor::omp_executor> = 0>
-  void merge_indices(const Executor &exec, Indices& indices, std::vector<std::uint8_t>& keep) {
+  void extractMarkedIndices(const Executor &exec, Indices& indices, const std::vector<std::uint8_t>& keep) {
     pcl::utils::ignore(exec);
     for (index_t i = 0; i < keep.size(); ++i) {
       if (keep[i])
