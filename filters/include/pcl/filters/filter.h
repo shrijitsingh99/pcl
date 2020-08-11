@@ -42,6 +42,7 @@
 #include <pcl/pcl_base.h>
 #include <pcl/common/io.h>
 #include <pcl/PointIndices.h>
+#include <pcl/experimental/executor/executor.h>
 
 namespace pcl
 {
@@ -76,12 +77,15 @@ namespace pcl
     * \author Radu B. Rusu
     * \ingroup filters
     */
-  template<typename PointT>
+  template<typename PointT, typename DerivedFilter = void>
   class Filter : public PCLBase<PointT>
   {
+    using Self = Filter<PointT, DerivedFilter>;
+    using Base = PCLBase<PointT>;
+
     public:
-      using Ptr = shared_ptr<Filter<PointT> >;
-      using ConstPtr = shared_ptr<const Filter<PointT> >;
+      using Ptr = shared_ptr<Self>;
+      using ConstPtr = shared_ptr<const Self>;
 
 
       using PointCloud = pcl::PointCloud<PointT>;
@@ -143,6 +147,40 @@ namespace pcl
         deinitCompute ();
       }
 
+    /** \brief filter method with specified executor.
+      *
+      * The implementation needs to set output.{points, width, height, is_dense}.
+      *
+      * \param[int] exec the executor to run the filter using
+      * \param[out] output the resultant filtered point cloud
+      */
+    template <typename Executor>
+    inline void
+    filter (const Executor &exec, PointCloud &output)
+      {
+        if (!initCompute ())
+          return;
+
+        if (input_.get () == &output)  // cloud_in = cloud_out
+        {
+          PointCloud output_temp;
+          static_cast<DerivedFilter&>(*this).applyFilter(exec, output_temp);
+          output_temp.header = input_->header;
+          output_temp.sensor_origin_ = input_->sensor_origin_;
+          output_temp.sensor_orientation_ = input_->sensor_orientation_;
+          pcl::copyPointCloud (output_temp, output);
+        }
+        else
+        {
+          output.header = input_->header;
+          output.sensor_origin_ = input_->sensor_origin_;
+          output.sensor_orientation_ = input_->sensor_orientation_;
+          static_cast<DerivedFilter&>(*this).applyFilter(exec, output);
+        }
+
+        deinitCompute ();
+      }
+
     protected:
 
       using PCLBase<PointT>::indices_;
@@ -176,6 +214,9 @@ namespace pcl
         return (filter_name_);
       }
   };
+
+  template <typename PointT>
+  using FilterLegacy = Filter<PointT>;
 
   ////////////////////////////////////////////////////////////////////////////////////////////
   /** \brief Filter represents the base filter class. All filters must inherit from this interface.
