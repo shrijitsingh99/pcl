@@ -113,7 +113,7 @@ pcl::FilterIndices<PointT, DerivedFilter>::applyFilter (const Executor &exec, Po
 {
   static_assert(!std::is_same<DerivedFilter, void>::value, "An executor overload doesn't exist.");
 
-  std::vector<int> indices;
+  pcl::Indices indices;
   if (keep_organized_)
   {
     if (!extract_removed_indices_)
