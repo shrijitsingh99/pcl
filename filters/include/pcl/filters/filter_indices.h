@@ -77,7 +77,6 @@ namespace pcl
     using Base = Filter<PointT, Self>;
 
   public:
-      using Base::extract_removed_indices_;
       using PointCloud = pcl::PointCloud<PointT>;
 
       using Ptr = shared_ptr<Self>;
@@ -186,13 +185,13 @@ namespace pcl
       applyFilter (const Executor &exec, PointCloud &output);
 
     protected:
-
       using Base::initCompute;
       using Base::deinitCompute;
       using Base::input_;
       using Base::removed_indices_;
+      using Base::extract_removed_indices_;
 
-      /** \brief False = normal filter behavior (default), true = inverted behavior. */
+    /** \brief False = normal filter behavior (default), true = inverted behavior. */
       bool negative_;
 
       /** \brief False = remove points (default), true = redefine points, keep structure. */
