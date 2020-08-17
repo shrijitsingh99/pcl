@@ -57,7 +57,7 @@ namespace pcl
   template<typename PointT> void
   removeNaNFromPointCloud (const pcl::PointCloud<PointT> &cloud_in,
                            pcl::PointCloud<PointT> &cloud_out,
-                           std::vector<int> &index);
+                           Indices &index);
 
   /** \brief Removes points that have their normals invalid (i.e., equal to NaN)
     * \param[in] cloud_in the input point cloud
@@ -70,7 +70,7 @@ namespace pcl
   template<typename PointT> void
   removeNaNNormalsFromPointCloud (const pcl::PointCloud<PointT> &cloud_in,
                                   pcl::PointCloud<PointT> &cloud_out,
-                                  std::vector<int> &index);
+                                  Indices &index);
 
   ////////////////////////////////////////////////////////////////////////////////////////////
   /** \brief Filter represents the base filter class. All filters must inherit from this interface.
@@ -98,7 +98,7 @@ namespace pcl
         * separate list. Default: false.
         */
       Filter (bool extract_removed_indices = false) :
-        removed_indices_ (new std::vector<int>),
+        removed_indices_ (new Indices),
         extract_removed_indices_ (extract_removed_indices)
       {
       }
@@ -248,7 +248,7 @@ namespace pcl
         * separate list. Default: false.
         */
       Filter (bool extract_removed_indices = false) :
-        removed_indices_ (new std::vector<int>),
+        removed_indices_ (new Indices),
         extract_removed_indices_ (extract_removed_indices)
       {
       }

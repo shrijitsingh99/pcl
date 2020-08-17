@@ -42,7 +42,7 @@
 
 template <typename PointT> void
 pcl::removeNaNFromPointCloud (const pcl::PointCloud<PointT> &cloud_in,
-                              std::vector<int> &index)
+                              Indices &index)
 {
   // Reserve enough space for the indices
   index.resize (cloud_in.size ());
@@ -77,7 +77,7 @@ template<typename PointT, typename DerivedFilter>
 inline void
 pcl::FilterIndices<PointT, DerivedFilter>::applyFilter (PointCloud &output)
 {
-  std::vector<int> indices;
+  Indices indices;
   if (keep_organized_)
   {
     if (!extract_removed_indices_)
@@ -150,7 +150,7 @@ pcl::FilterIndices<PointT, DerivedFilter>::applyFilter (const Executor &exec, Po
 
 
 #ifndef PCL_NO_PRECOMPILE
-#define PCL_INSTANTIATE_removeNanFromPointCloud(T) template PCL_EXPORTS void pcl::removeNaNFromPointCloud<T>(const pcl::PointCloud<T>&, std::vector<int>&);
+#define PCL_INSTANTIATE_removeNanFromPointCloud(T) template PCL_EXPORTS void pcl::removeNaNFromPointCloud<T>(const pcl::PointCloud<T>&, Indices&);
 #define PCL_INSTANTIATE_FilterIndices(T) template class PCL_EXPORTS  pcl::FilterIndices<T>;
 #endif
 
