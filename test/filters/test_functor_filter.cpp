@@ -35,67 +35,6 @@ TEST(FunctorFilterTrait, CheckCompatibility)
   EXPECT_TRUE((is_functor_for_filter_v<PointXYZ, decltype(const_ref_all)>));
 }
 
-struct FunctorFilterRandom : public testing::TestWithParam<std::uint32_t> {
-  void
-  SetUp() override
-  {
-    cloud = make_shared<PointCloud<PointXYZ>>();
-
-    std::uint32_t seed = GetParam();
-    common::CloudGenerator<PointXYZ, common::UniformGenerator<float>> generator{
-        {-10., 0., seed}};
-    generator.fill(20, 20, negative_cloud);
-    generator.setParameters({0., 10., seed});
-    generator.fill(10, 10, positive_cloud);
-    *cloud = negative_cloud + positive_cloud;
-  }
-
-  shared_ptr<PointCloud<PointXYZ>> cloud;
-  PointCloud<PointXYZ> out_cloud, negative_cloud, positive_cloud;
-};
-
-TEST_P(FunctorFilterRandom, functioning)
-{
-
-  const auto lambda = [](const PointCloud<PointXYZ>& cloud, index_t idx) {
-    const auto& pt = cloud[idx];
-    return (pt.getArray3fMap() < 0).all();
-  };
-
-  for (const auto& keep_removed : {true, false}) {
-    FunctorFilter<PointXYZ, decltype(lambda)> filter{lambda, keep_removed};
-    filter.setInputCloud(cloud);
-    const auto removed_size = filter.getRemovedIndices()->size();
-
-    filter.setNegative(false);
-    filter.filter(out_cloud);
-
-    EXPECT_EQ(out_cloud.size(), negative_cloud.size());
-    if (keep_removed) {
-      EXPECT_EQ(filter.getRemovedIndices()->size(), positive_cloud.size());
-    }
-    else {
-      EXPECT_EQ(filter.getRemovedIndices()->size(), removed_size);
-    }
-
-    filter.setNegative(true);
-    filter.filter(out_cloud);
-
-    EXPECT_EQ(out_cloud.size(), positive_cloud.size());
-    if (keep_removed) {
-      EXPECT_EQ(filter.getRemovedIndices()->size(), negative_cloud.size());
-    }
-    else {
-      EXPECT_EQ(filter.getRemovedIndices()->size(), removed_size);
-    }
-  }
-}
-
-INSTANTIATE_TEST_SUITE_P(RandomSeed,
-                         FunctorFilterRandom,
-                         testing::Values(123, 456, 789));
-
-
 template <typename T>
 class FunctorFilterExecutor : public ::testing::Test {
 public:
@@ -103,8 +42,13 @@ public:
   SetUp() override
   {
     cloud = make_shared<PointCloud<PointXYZ>>();
+  }
 
-    std::uint32_t seed = 123;
+  void
+  fillCloud(std::uint32_t seed)
+  {
+    cloud = make_shared<PointCloud<PointXYZ>>();
+
     common::CloudGenerator<PointXYZ, common::UniformGenerator<float>> generator{
         {-10., 0., seed}};
     generator.fill(20, 20, negative_cloud);
@@ -115,38 +59,80 @@ public:
 
   shared_ptr<PointCloud<PointXYZ>> cloud;
   PointCloud<PointXYZ> out_cloud, negative_cloud, positive_cloud;
+  std::array<std::uint32_t, 3> seeds = {123, 456, 789};
+
+  template <typename Executor,
+            typename Filter,
+            typename std::enable_if<std::is_same<Executor, void>::value, int>::type = 0>
+  void
+  executeFilter(Filter& filter)
+  {
+    filter.filter(this->out_cloud);
+  }
+
+  template <
+      typename Executor,
+      typename Filter,
+      typename std::enable_if<!std::is_same<Executor, void>::value, int>::type = 0>
+  void
+  executeFilter(Filter& filter)
+  {
+    const Executor exec;
+    filter.filter(exec, this->out_cloud);
+  }
+
+  template <typename Executor = void>
+  void
+  runTest()
+  {
+    const auto lambda = [](const PointCloud<PointXYZ>& cloud, index_t idx) {
+      const auto& pt = cloud[idx];
+      return (pt.getArray3fMap() < 0).all();
+    };
+
+    for (const auto& keep_removed : {true, false}) {
+      FunctorFilter<PointXYZ, decltype(lambda)> filter{lambda, keep_removed};
+      filter.setInputCloud(this->cloud);
+      const auto removed_size = filter.getRemovedIndices()->size();
+
+      filter.setNegative(false);
+      executeFilter<Executor>(filter);
+
+      EXPECT_EQ(this->out_cloud.size(), this->negative_cloud.size());
+      if (keep_removed) {
+        EXPECT_EQ(filter.getRemovedIndices()->size(), this->positive_cloud.size());
+      }
+      else {
+        EXPECT_EQ(filter.getRemovedIndices()->size(), removed_size);
+      }
+
+      filter.setNegative(true);
+      executeFilter<Executor>(filter);
+
+      EXPECT_EQ(this->out_cloud.size(), this->positive_cloud.size());
+      if (keep_removed) {
+        EXPECT_EQ(filter.getRemovedIndices()->size(), this->negative_cloud.size());
+      }
+      else {
+        EXPECT_EQ(filter.getRemovedIndices()->size(), removed_size);
+      }
+    }
+  }
 };
 
-using ExecutorTypes = ::testing::Types<executor::inline_executor<>, executor::omp_executor<>>;
+using ExecutorTypes = ::testing::Types<executor::inline_executor<>,
+                                       executor::omp_executor<>,
+                                       void>; // void type to run the filter without any
+                                              // executor i.e. using best fit
 TYPED_TEST_SUITE(FunctorFilterExecutor, ExecutorTypes);
 
 TYPED_TEST(FunctorFilterExecutor, executors)
 {
-  const auto exec = TypeParam{};
-
-  const auto lambda = [](const PointCloud<PointXYZ>& cloud, index_t idx) {
-    const auto& pt = cloud[idx];
-    return (pt.getArray3fMap() < 0).all();
-  };
-
-  for (const auto& keep_removed : {true, false}) {
-    FunctorFilter<PointXYZ, decltype(lambda)> filter{lambda, keep_removed};
-    filter.setInputCloud(this->cloud);
-    const auto removed_size = filter.getRemovedIndices()->size();
-
-    filter.setNegative(false);
-    filter.filter(exec, this->out_cloud);
-
-    EXPECT_EQ(this->out_cloud.size(), this->negative_cloud.size());
-    if (keep_removed) {
-      EXPECT_EQ(filter.getRemovedIndices()->size(), this->positive_cloud.size());
-    }
-    else {
-      EXPECT_EQ(filter.getRemovedIndices()->size(), removed_size);
-    }
+  for (auto seed : this->seeds) {
+    this->fillCloud(seed);
+    this->template runTest<TypeParam>();
   }
 }
-
 
 namespace type_test {
 int
