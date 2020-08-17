@@ -166,6 +166,8 @@ namespace pcl
                           PointCloud&>,
                       "An executor overload for applyFilter doesn't exist.");
 
+        if (!initCompute ())
+          return;
 
         if (input_.get () == &output)  // cloud_in = cloud_out
         {
