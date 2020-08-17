@@ -119,7 +119,12 @@ namespace pcl
       void
       filter (const Executor &exec, std::vector<int> &indices)
       {
-        static_assert(!std::is_same<DerivedFilter, void>::value, "An executor overload doesn't exist.");
+        static_assert(pcl::is_invocable_v<
+                          decltype(&DerivedFilter::template applyFilter<Executor>),
+                          DerivedFilter&,
+                          Executor const&,
+                          PointCloud&>,
+                      "An executor overload for applyFilter doesn't exist.");
 
         if (!initCompute ())
           return;
