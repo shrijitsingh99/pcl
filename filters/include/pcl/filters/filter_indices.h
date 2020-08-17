@@ -321,6 +321,4 @@ namespace pcl
   };
 }
 
-#ifdef PCL_NO_PRECOMPILE
 #include <pcl/filters/impl/filter_indices.hpp>
-#endif
