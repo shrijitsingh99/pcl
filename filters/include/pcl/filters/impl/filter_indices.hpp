@@ -111,7 +111,12 @@ template<typename PointT, typename DerivedFilter>
 template <typename Executor> void
 pcl::FilterIndices<PointT, DerivedFilter>::applyFilter (const Executor &exec, PointCloud &output)
 {
-  static_assert(!std::is_same<DerivedFilter, void>::value, "An executor overload doesn't exist.");
+  static_assert(
+      pcl::is_invocable_v<decltype(&DerivedFilter::template applyFilter<Executor>),
+                          DerivedFilter&,
+                          Executor const&,
+                          PointCloud&>,
+      "An executor overload for applyFilter doesn't exist.");
 
   pcl::Indices indices;
   if (keep_organized_)

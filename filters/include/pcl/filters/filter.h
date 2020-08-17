@@ -157,9 +157,14 @@ namespace pcl
     template <typename Executor>
     inline void
     filter (const Executor &exec, PointCloud &output)
-      {
-        if (!initCompute ())
-          return;
+    {
+      static_assert(
+          pcl::is_invocable_v<decltype(&DerivedFilter::template applyFilter<Executor>),
+                              DerivedFilter&,
+                              Executor const&,
+                              PointCloud&>,
+          "An executor overload for applyFilter doesn't exist.");
+
 
         if (input_.get () == &output)  // cloud_in = cloud_out
         {
