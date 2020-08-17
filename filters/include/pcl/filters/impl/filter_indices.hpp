@@ -149,8 +149,10 @@ pcl::FilterIndices<PointT, DerivedFilter>::applyFilter (const Executor &exec, Po
 }
 
 
+#ifndef PCL_NO_PRECOMPILE
 #define PCL_INSTANTIATE_removeNanFromPointCloud(T) template PCL_EXPORTS void pcl::removeNaNFromPointCloud<T>(const pcl::PointCloud<T>&, std::vector<int>&);
 #define PCL_INSTANTIATE_FilterIndices(T) template class PCL_EXPORTS  pcl::FilterIndices<T>;
+#endif
 
 #endif    // PCL_FILTERS_IMPL_FILTER_INDICES_H_
 
