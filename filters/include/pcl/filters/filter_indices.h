@@ -76,6 +76,8 @@ namespace pcl
   {
     using Self = FilterIndices<PointT, DerivedFilter>;
     using Base = Filter<PointT, Self>;
+    friend Base; // Alows the base class to call protected/private methods of this class
+                 // i.e. applyFilter overloaded for executor
 
   public:
       using PointCloud = pcl::PointCloud<PointT>;
@@ -184,18 +186,6 @@ namespace pcl
         user_filter_value_ = value;
       }
 
-
-      /** \brief overloaded filter method with specified executor.
-       *
-       * The implementation needs to set output.{points, width, height, is_dense}.
-       *
-       * \param[int] exec the executor to run the filter using
-       * \param[out] output the resultant filtered point cloud
-       */
-      template <typename Executor>
-      void
-      applyFilter (const Executor &exec, PointCloud &output);
-
     protected:
       using Base::initCompute;
       using Base::deinitCompute;
@@ -219,6 +209,17 @@ namespace pcl
       /** \brief Abstract filter method for point cloud. */
       void
       applyFilter (PointCloud &output) override;
+
+    /** \brief overloaded filter method with specified executor.
+      *
+      * The implementation needs to set output.{points, width, height, is_dense}.
+      *
+      * \param[int] exec the executor to run the filter using
+      * \param[out] output the resultant filtered point cloud
+      */
+      template <typename Executor>
+      void
+      applyFilter (const Executor &exec, PointCloud &output);
   };
 
   template <typename PointT>
