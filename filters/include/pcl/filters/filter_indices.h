@@ -58,12 +58,12 @@ namespace pcl
     * \ingroup filters
     */
   template<typename PointT> void
-  removeNaNFromPointCloud (const pcl::PointCloud<PointT> &cloud_in, std::vector<int> &index);
+  removeNaNFromPointCloud (const pcl::PointCloud<PointT> &cloud_in, Indices &index);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /** \brief @b FilterIndices represents the base class for filters that are about binary point removal.
     * <br>
-    * All derived classes have to implement the \a filter (PointCloud &output) and the \a filter (std::vector<int> &indices) methods.
+    * All derived classes have to implement the \a filter (PointCloud &output) and the \a filter (Indices &indices) methods.
     * Ideally they also make use of the \a negative_, \a keep_organized_ and \a extract_removed_indices_ systems.
     * The distinguishment between the \a negative_ and \a extract_removed_indices_ systems only makes sense if the class automatically
     * filters non-finite entries in the filtering methods (recommended).
@@ -103,7 +103,7 @@ namespace pcl
         * \param[out] indices the resultant filtered point cloud indices
         */
       void
-      filter (std::vector<int> &indices)
+      filter (Indices &indices)
       {
         if (!initCompute ())
           return;
@@ -120,7 +120,7 @@ namespace pcl
         */
       template <typename Executor>
       void
-      filter (const Executor &exec, std::vector<int> &indices)
+      filter (const Executor &exec, Indices &indices)
       {
         static_assert(pcl::is_invocable_v<
                           decltype(&DerivedFilter::template applyFilter<Executor>),
@@ -204,7 +204,7 @@ namespace pcl
 
       /** \brief Abstract filter method for point cloud indices. */
       virtual void
-      applyFilter (std::vector<int> &indices) = 0;
+      applyFilter (Indices &indices) = 0;
 
       /** \brief Abstract filter method for point cloud. */
       void
@@ -228,7 +228,7 @@ namespace pcl
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /** \brief @b FilterIndices represents the base class for filters that are about binary point removal.
     * <br>
-    * All derived classes have to implement the \a filter (PointCloud &output) and the \a filter (std::vector<int> &indices) methods.
+    * All derived classes have to implement the \a filter (PointCloud &output) and the \a filter (Indices &indices) methods.
     * Ideally they also make use of the \a negative_, \a keep_organized_ and \a extract_removed_indices_ systems.
     * The distinguishment between the \a negative_ and \a extract_removed_indices_ systems only makes sense if the class automatically
     * filters non-finite entries in the filtering methods (recommended).
@@ -259,7 +259,7 @@ namespace pcl
         * \param[out] indices the resultant filtered point cloud indices
         */
       void
-      filter (std::vector<int> &indices);
+      filter (Indices &indices);
 
       /** \brief Set whether the regular conditions for points filtering should apply, or the inverted conditions.
         * \param[in] negative false = normal filter behavior (default), true = inverted behavior.
@@ -322,7 +322,7 @@ namespace pcl
 
       /** \brief Abstract filter method for point cloud indices. */
       virtual void
-      applyFilter (std::vector<int> &indices) = 0;
+      applyFilter (Indices &indices) = 0;
 
       /** \brief Abstract filter method for point cloud. */
       void
