@@ -67,6 +67,7 @@ namespace pcl
     * Ideally they also make use of the \a negative_, \a keep_organized_ and \a extract_removed_indices_ systems.
     * The distinguishment between the \a negative_ and \a extract_removed_indices_ systems only makes sense if the class automatically
     * filters non-finite entries in the filtering methods (recommended).
+    * \warning PCLPointCloud2 is not currently supported by executors
     * \author Justin Rosen
     * \ingroup filters
     */
@@ -184,7 +185,13 @@ namespace pcl
       }
 
 
-      /** \brief filter method for point cloud with specified executor*/
+      /** \brief overloaded filter method with specified executor.
+       *
+       * The implementation needs to set output.{points, width, height, is_dense}.
+       *
+       * \param[int] exec the executor to run the filter using
+       * \param[out] output the resultant filtered point cloud
+       */
       template <typename Executor>
       void
       applyFilter (const Executor &exec, PointCloud &output);
@@ -224,6 +231,7 @@ namespace pcl
     * Ideally they also make use of the \a negative_, \a keep_organized_ and \a extract_removed_indices_ systems.
     * The distinguishment between the \a negative_ and \a extract_removed_indices_ systems only makes sense if the class automatically
     * filters non-finite entries in the filtering methods (recommended).
+    * \warning PCLPointCloud2 is not currently supported by executors
     * \author Justin Rosen
     * \ingroup filters
     */

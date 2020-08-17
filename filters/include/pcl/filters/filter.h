@@ -74,6 +74,7 @@ namespace pcl
 
   ////////////////////////////////////////////////////////////////////////////////////////////
   /** \brief Filter represents the base filter class. All filters must inherit from this interface.
+    * \warning PCLPointCloud2 is not currently supported by executors
     * \author Radu B. Rusu
     * \ingroup filters
     */
@@ -147,23 +148,23 @@ namespace pcl
         deinitCompute ();
       }
 
-    /** \brief filter method with specified executor.
-      *
-      * The implementation needs to set output.{points, width, height, is_dense}.
-      *
-      * \param[int] exec the executor to run the filter using
-      * \param[out] output the resultant filtered point cloud
-      */
-    template <typename Executor>
-    inline void
-    filter (const Executor &exec, PointCloud &output)
-    {
-      static_assert(
-          pcl::is_invocable_v<decltype(&DerivedFilter::template applyFilter<Executor>),
-                              DerivedFilter&,
-                              Executor const&,
-                              PointCloud&>,
-          "An executor overload for applyFilter doesn't exist.");
+      /** \brief filter method with specified executor.
+       *
+       * The implementation needs to set output.{points, width, height, is_dense}.
+       *
+       * \param[int] exec the executor to run the filter using
+       * \param[out] output the resultant filtered point cloud
+       */
+      template <typename Executor>
+      inline void
+      filter(const Executor& exec, PointCloud& output)
+      {
+        static_assert(pcl::is_invocable_v<
+                          decltype(&DerivedFilter::template applyFilter<Executor>),
+                          DerivedFilter&,
+                          Executor const&,
+                          PointCloud&>,
+                      "An executor overload for applyFilter doesn't exist.");
 
 
         if (input_.get () == &output)  // cloud_in = cloud_out
@@ -225,6 +226,7 @@ namespace pcl
 
   ////////////////////////////////////////////////////////////////////////////////////////////
   /** \brief Filter represents the base filter class. All filters must inherit from this interface.
+    * \warning PCLPointCloud2 is not currently supported by executors
     * \author Radu B. Rusu
     * \ingroup filters
     */
