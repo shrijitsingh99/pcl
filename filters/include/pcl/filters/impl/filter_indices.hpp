@@ -115,7 +115,7 @@ pcl::FilterIndices<PointT, DerivedFilter>::applyFilter (const Executor &exec, Po
       pcl::is_invocable_v<decltype(&DerivedFilter::template applyFilter<Executor>),
                           DerivedFilter&,
                           Executor const&,
-                          PointCloud&>,
+                          pcl::Indices&>,
       "An executor overload for applyFilter doesn't exist.");
 
   pcl::Indices indices;
