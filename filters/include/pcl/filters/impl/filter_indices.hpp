@@ -88,14 +88,14 @@ template<typename PointT, typename DerivedFilter>
 template <typename Executor> void
 pcl::FilterIndices<PointT, DerivedFilter>::applyFilter (const Executor &exec, PointCloud &output)
 {
-  auto filterIndices = [this, exec](pcl::Indices& indices){
-    static_assert(
-        pcl::is_invocable_v<decltype(&DerivedFilter::template applyFilter<Executor>),
-            DerivedFilter&,
-            Executor const&,
-            pcl::Indices&>,
-        "An executor overload for applyFilter doesn't exist.");
+  static_assert(
+      pcl::is_invocable_v<decltype(&DerivedFilter::template applyFilter<Executor>),
+                          DerivedFilter&,
+                          Executor const&,
+                          pcl::Indices&>,
+      "An executor overload for applyFilter doesn't exist.");
 
+  auto filterIndices = [this, exec](pcl::Indices& indices) {
     static_cast<DerivedFilter&>(*this).applyFilter(exec, indices);
   };
 

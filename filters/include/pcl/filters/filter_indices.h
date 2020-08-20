@@ -122,15 +122,14 @@ namespace pcl
       void
       filter (const Executor &exec, Indices &indices)
       {
+        static_assert(pcl::is_invocable_v<
+                          decltype(&DerivedFilter::template applyFilter<Executor>),
+                          DerivedFilter&,
+                          Executor const&,
+                          PointCloud&>,
+                      "An executor overload for applyFilter doesn't exist.");
 
         auto filterCloud = [exec, this](Indices& indices) {
-          static_assert(pcl::is_invocable_v<
-                            decltype(&DerivedFilter::template applyFilter<Executor>),
-                            DerivedFilter&,
-                            Executor const&,
-                            PointCloud&>,
-                        "An executor overload for applyFilter doesn't exist.");
-
           static_cast<DerivedFilter&>(*this).applyFilter(exec, indices);
         };
 
