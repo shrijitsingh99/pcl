@@ -125,27 +125,11 @@ namespace pcl
       inline void
       filter (PointCloud &output)
       {
-        if (!initCompute ())
-          return;
+        auto filterCloud = [this](PointCloud& output) {
+          applyFilter(output);
+        };
 
-        if (input_.get () == &output)  // cloud_in = cloud_out
-        {
-          PointCloud output_temp;
-          applyFilter (output_temp);
-          output_temp.header = input_->header;
-          output_temp.sensor_origin_ = input_->sensor_origin_;
-          output_temp.sensor_orientation_ = input_->sensor_orientation_;
-          pcl::copyPointCloud (output_temp, output);
-        }
-        else
-        {
-          output.header = input_->header;
-          output.sensor_origin_ = input_->sensor_origin_;
-          output.sensor_orientation_ = input_->sensor_orientation_;
-          applyFilter (output);
-        }
-
-        deinitCompute ();
+        filterImpl(filterCloud, output);
       }
 
       /** \brief filter method with specified executor.
@@ -159,34 +143,19 @@ namespace pcl
       inline void
       filter(const Executor& exec, PointCloud& output)
       {
-        static_assert(pcl::is_invocable_v<
-                          decltype(&DerivedFilter::template applyFilter<Executor>),
-                          DerivedFilter&,
-                          Executor const&,
-                          PointCloud&>,
-                      "An executor overload for applyFilter doesn't exist.");
+        auto filterCloud = [exec, this](PointCloud& output) {
+              static_assert(
+                  pcl::is_invocable_v<
+                      decltype(&DerivedFilter::template applyFilter<Executor>),
+                      DerivedFilter&,
+                      Executor const&,
+                      PointCloud&>,
+                  "An executor overload for applyFilter doesn't exist.");
 
-        if (!initCompute ())
-          return;
+            static_cast<DerivedFilter&>(*this).applyFilter(exec, output);
+        };
 
-        if (input_.get () == &output)  // cloud_in = cloud_out
-        {
-          PointCloud output_temp;
-          static_cast<DerivedFilter&>(*this).applyFilter(exec, output_temp);
-          output_temp.header = input_->header;
-          output_temp.sensor_origin_ = input_->sensor_origin_;
-          output_temp.sensor_orientation_ = input_->sensor_orientation_;
-          pcl::copyPointCloud (output_temp, output);
-        }
-        else
-        {
-          output.header = input_->header;
-          output.sensor_origin_ = input_->sensor_origin_;
-          output.sensor_orientation_ = input_->sensor_orientation_;
-          static_cast<DerivedFilter&>(*this).applyFilter(exec, output);
-        }
-
-        deinitCompute ();
+        filterImpl(filterCloud, output);
       }
 
     protected:
@@ -214,6 +183,40 @@ namespace pcl
         */
       virtual void
       applyFilter (PointCloud &output) = 0;
+
+    /** \brief implementation of filter method
+      *  Added to ensure no code duplication is present between the with and without
+      * execuotor filter method
+      *
+      * \param[int] filterIndices the callable which calls the filter method
+      * \param[out] output the resultant filtered point cloud
+      */
+      template <typename Callable>
+      void
+      filterImpl (Callable &filterCloud, PointCloud &output)
+      {
+        if (!initCompute ())
+          return;
+
+        if (input_.get () == &output)  // cloud_in = cloud_out
+        {
+          PointCloud output_temp;
+          filterCloud(output);
+          output_temp.header = input_->header;
+          output_temp.sensor_origin_ = input_->sensor_origin_;
+          output_temp.sensor_orientation_ = input_->sensor_orientation_;
+          pcl::copyPointCloud (output_temp, output);
+        }
+        else
+        {
+          output.header = input_->header;
+          output.sensor_origin_ = input_->sensor_origin_;
+          output.sensor_orientation_ = input_->sensor_orientation_;
+          filterCloud(output);
+        }
+
+        deinitCompute ();
+      }
 
       /** \brief Get a string representation of the name of this class. */
       inline const std::string&

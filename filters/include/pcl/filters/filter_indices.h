@@ -122,20 +122,19 @@ namespace pcl
       void
       filter (const Executor &exec, Indices &indices)
       {
-        static_assert(pcl::is_invocable_v<
-                          decltype(&DerivedFilter::template applyFilter<Executor>),
-                          DerivedFilter&,
-                          Executor const&,
-                          PointCloud&>,
-                      "An executor overload for applyFilter doesn't exist.");
 
-        if (!initCompute ())
-          return;
+        auto filterCloud = [exec, this](Indices& indices) {
+          static_assert(pcl::is_invocable_v<
+                            decltype(&DerivedFilter::template applyFilter<Executor>),
+                            DerivedFilter&,
+                            Executor const&,
+                            PointCloud&>,
+                        "An executor overload for applyFilter doesn't exist.");
 
-        // Apply the actual filter
-        static_cast<DerivedFilter&>(*this).applyFilter(exec, indices);
+          static_cast<DerivedFilter&>(*this).applyFilter(exec, indices);
+        };
 
-        deinitCompute ();
+        filterImpl(filterCloud, indices);
       }
 
     /** \brief Set whether the regular conditions for points filtering should apply, or the inverted conditions.
@@ -202,6 +201,26 @@ namespace pcl
       /** \brief The user given value that the filtered point dimensions should be set to (default = NaN). */
       float user_filter_value_;
 
+    /** \brief implementation of filter method
+      *  Added to ensure no code duplication is present between the with and without
+      * execuotor filter method
+      *
+      * \param[int] filterIndices the callable which calls the filter method
+      * \param[out] output the resultant filtered point cloud
+      */
+      template <typename Callable>
+      void
+      filterImpl (Callable &filterCloud, Indices &indices)
+      {
+        if (!initCompute ())
+          return;
+
+        // Apply the actual filter
+        filterCloud(indices);
+
+        deinitCompute ();
+      }
+
       /** \brief Abstract filter method for point cloud indices. */
       virtual void
       applyFilter (Indices &indices) = 0;
@@ -220,7 +239,18 @@ namespace pcl
       template <typename Executor>
       void
       applyFilter (const Executor &exec, PointCloud &output);
-  };
+
+    /** \brief implementation of applyFilter method
+     *  Added to ensure no code duplication is present between the with and without
+     * execuotor applyFilter method
+     *
+     * \param[int] filterIndices the callable which calls the applyFilter method
+     * \param[out] output the resultant filtered point cloud
+     */
+      template <typename Callable>
+      void
+      applyFilterImpl (Callable &filterIndices, PointCloud &output);
+    };
 
   template <typename PointT>
   using FilterIndicesLegacy = FilterIndices<PointT>;
