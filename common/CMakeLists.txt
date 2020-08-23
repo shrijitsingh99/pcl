@@ -175,13 +175,11 @@ set(executor_incs
   include/pcl/experimental/executor/executor.h
   include/pcl/experimental/executor/property.h
   include/pcl/experimental/executor/type_trait.h
-)
-
-set(executor_default_incs_impl
-  include/pcl/experimental/executor/default/cuda_executor.hpp
-  include/pcl/experimental/executor/default/omp_executor.hpp
-  include/pcl/experimental/executor/default/inline_executor.hpp
-  include/pcl/experimental/executor/default/sse_executor.hpp
+  include/pcl/experimental/executor/cuda_executor.hpp
+  include/pcl/experimental/executor/omp_executor.hpp
+  include/pcl/experimental/executor/inline_executor.hpp
+  include/pcl/experimental/executor/sse_executor.hpp
+  include/pcl/experimental/executor/best_fit.hpp
 )
 
 set(executor_property_incs_impl
@@ -230,6 +228,5 @@ PCL_ADD_INCLUDES("${SUBSYS_NAME}" console ${tools_incs})
 PCL_ADD_INCLUDES("${SUBSYS_NAME}" range_image ${range_image_incs})
 PCL_ADD_INCLUDES("${SUBSYS_NAME}" range_image/impl ${range_image_incs_impl})
 PCL_ADD_INCLUDES("${SUBSYS_NAME}" experimental/executor ${executor_incs})
-PCL_ADD_INCLUDES("${SUBSYS_NAME}" experimental/executor/default ${executor_default_incs_impl})
 PCL_ADD_INCLUDES("${SUBSYS_NAME}" experimental/executor/property ${executor_property_incs_impl})
 PCL_ADD_INCLUDES("${SUBSYS_NAME}" experimental/executor/trait ${executor_trait_incs_impl})

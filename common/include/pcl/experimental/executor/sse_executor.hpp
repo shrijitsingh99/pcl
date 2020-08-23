@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  *
  *  Point Cloud Library (PCL) - www.pointclouds.org
- *  Copyright (c) 2014-, Open Perception, Inc.
+ *  Copyright (c) 2020-, Open Perception, Inc.
  *  Author: Shrijit Singh <shrijitsingh99@gmail.com>
  *
  */
@@ -27,27 +27,33 @@ template <typename Blocking = blocking_t::always_t,
 struct sse_executor {
   using shape_type = std::size_t;
 
-  template <typename Executor, instance_of_base<Executor, sse_executor> = 0>
+  template <typename Executor, InstanceOf<Executor, sse_executor> = 0>
   friend bool operator==(const sse_executor& lhs,
                          const Executor& rhs) noexcept {
+    pcl::utils::ignore(lhs, rhs);
     return std::is_same<sse_executor, Executor>::value;
   }
 
-  template <typename Executor, instance_of_base<Executor, sse_executor> = 0>
+  template <typename Executor, InstanceOf<Executor, sse_executor> = 0>
   friend bool operator!=(const sse_executor& lhs,
                          const Executor& rhs) noexcept {
+    pcl::utils::ignore(lhs, rhs);
     return !operator==(lhs, rhs);
   }
 
   template <typename F>
   void execute(F&& f) const {
+    static_assert(is_executor_available_v<sse_executor>,
+                  "SSE executor unavailable");
     f();
   }
 
   template <typename F>
-  void bulk_execute(F&& f, const shape_type n) const {
-    // TODO: Look into what bulk execute will do for SSE
-#pragma simd
+  void bulk_execute(F&& f, const shape_type& n) const {
+    static_assert(is_executor_available_v<sse_executor>,
+                  "SSE executor unavailable");
+    pcl::utils::ignore(f, n);
+    // TODO: Look into  #pragma simd and what bulk execute will do for SSE
     f(0);
   }
 
@@ -58,7 +64,9 @@ struct sse_executor {
     return {};
   }
 
-  static constexpr auto name() { return "sse"; }
+  static constexpr auto name() { return "sse_executor"; }
 };
+
+using default_sse_executor = sse_executor<>;
 
 }  // namespace executor
