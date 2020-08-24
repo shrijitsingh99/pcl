@@ -76,11 +76,14 @@ public:
   void
   applyFilter(Indices& indices) override
   {
-    const auto exec = executor::best_fit{};
-    applyFilter(exec, indices);
+    auto filter = [&](auto exec) {
+      applyFilter(exec, indices);
+    };
+
+    executor::enable_exec_on_desc_priority(filter, executor::default_omp_executor{}, executor::default_inline_executor{});
   }
 
-  template <typename Executor, typename executor::instance_of_base<Executor, executor::inline_executor, executor::omp_executor> = 0>
+  template <typename Executor, typename executor::InstanceOfAny<Executor, executor::inline_executor, executor::omp_executor> = 0>
   void
   applyFilter (const Executor &exec, Indices& indices)
   {
@@ -108,7 +111,7 @@ public:
   }
 
 private:
-  template <typename Executor, typename executor::instance_of_base<Executor, executor::inline_executor, executor::omp_executor> = 0>
+  template <typename Executor, typename executor::InstanceOfAny<Executor, executor::inline_executor, executor::omp_executor> = 0>
   void extractMarkedIndices(const Executor &exec, Indices& indices, const std::vector<std::uint8_t>& keep) {
     pcl::utils::ignore(exec);
     for (index_t i = 0; i < keep.size(); ++i) {
