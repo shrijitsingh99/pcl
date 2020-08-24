@@ -200,7 +200,7 @@ namespace pcl
         if (input_.get () == &output)  // cloud_in = cloud_out
         {
           PointCloud output_temp;
-          filterCloud(output);
+          filterCloud(output_temp);
           output_temp.header = input_->header;
           output_temp.sensor_origin_ = input_->sensor_origin_;
           output_temp.sensor_orientation_ = input_->sensor_orientation_;
