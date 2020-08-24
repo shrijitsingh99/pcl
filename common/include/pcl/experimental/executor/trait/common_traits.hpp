@@ -59,7 +59,7 @@ constexpr bool equality_comparable_v = equality_comparable<T1, T2>::value;
  *   Custom Traits
  **/
 
-// is_instance_of_base
+// is_instance_of_any
 namespace detail {
 
 template <typename Executor, template <typename...> class Type, typename = void>
