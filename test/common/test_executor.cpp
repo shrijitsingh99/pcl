@@ -35,8 +35,8 @@ TYPED_TEST_SUITE(ExecutorValidity, ExecutorTypes);
 
 TYPED_TEST(ExecutorValidity, executors)
 {
-  EXPECT_TRUE((is_executor_v<TypeParam> == true));
-  EXPECT_TRUE((is_executor_v<int> == false));
+  EXPECT_TRUE(is_executor_v<TypeParam>);
+  EXPECT_FALSE(is_executor_v<int>);
 }
 
 template <typename Executor>
@@ -66,12 +66,12 @@ TYPED_TEST(ExecutorProperties, executors)
   TypeParam exec;
 
   EXPECT_EQ(exec.query(blocking), blocking_t::always);
-  auto new_exec1 = exec.require(blocking_t::always);
+  const auto new_exec1 = exec.require(blocking_t::always);
   EXPECT_EQ(new_exec1.query(blocking), blocking_t::always);
 
-  EXPECT_EQ(query(exec, executor::blocking_t::always), executor::blocking_t::always);
-  auto new_exec2 = require(exec, executor::blocking_t::always);
-  EXPECT_EQ(query(new_exec2, blocking), executor::blocking_t::always);
+  EXPECT_EQ(query(exec, blocking_t::always), blocking_t::always);
+  const auto new_exec2 = require(exec, blocking_t::always);
+  EXPECT_EQ(query(new_exec2, blocking), blocking_t::always);
 }
 
 template <typename Executor>
@@ -82,7 +82,7 @@ TYPED_TEST_SUITE(ExecutorExecute, ExecutorTypes);
 TYPED_TEST(ExecutorExecute, executors)
 {
   TypeParam exec;
-  int a = 1, b = 2;
+  const int a = 1, b = 2;
 
   int c = 0;
   exec.execute([&]() { c = a + b; });
@@ -95,7 +95,7 @@ TYPED_TEST(ExecutorExecute, executors)
           val = 1;
       },
       3);
-  EXPECT_EQ((c_vec[0] + c_vec[1] + c_vec[2]), c_vec.size());
+  EXPECT_EQ(c_vec[0] + c_vec[1] + c_vec[2], c_vec.size());
 }
 
 template <typename Executor>
