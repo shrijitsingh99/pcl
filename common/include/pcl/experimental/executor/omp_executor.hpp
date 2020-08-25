@@ -13,6 +13,7 @@
   #include <omp.h>
 #endif
 
+#include <pcl/console/print.h>
 #include <pcl/experimental/executor/property.h>
 #include <pcl/experimental/executor/type_trait.h>
 
@@ -79,7 +80,12 @@ struct omp_executor {
     pcl::utils::ignore(f, n);
 #ifdef _OPENMP
     const auto num_threads = n ? std::min(max_threads, n): max_threads;
-  #pragma omp parallel num_threads(num_threads)
+    if (num_threads < n)
+      PCL_WARN("[pcl::executor::omp_executor] Limiting max number of threads to "
+               "executor specified limit of %zu, instead of passed value %zu",
+               num_threads, n);
+
+#pragma omp parallel num_threads(num_threads)
     {
       index_type index{num_threads, omp_get_thread_num()};
       f(index);
