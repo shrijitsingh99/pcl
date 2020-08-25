@@ -31,7 +31,7 @@ template <typename Blocking = blocking_t::always_t,
 struct omp_executor {
   using shape_type = std::size_t;
 
-  using index_type = struct {
+  struct index_type {
     shape_type max;
     int idx;
   };

@@ -50,7 +50,7 @@ struct sse_executor {
   void bulk_execute(F&& f, const shape_type& n) const {
     static_assert(is_executor_available_v<sse_executor>,
                   "SSE executor unavailable");
-    pcl::utils::ignore(f, n);
+    pcl::utils::ignore(n);
     // TODO: Look into  #pragma simd and what bulk execute will do for SSE
     f(0);
   }

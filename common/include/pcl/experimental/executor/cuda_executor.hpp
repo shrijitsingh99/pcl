@@ -36,10 +36,10 @@ struct is_executor_available<cuda_executor> : std::true_type {};
 template <typename Blocking = blocking_t::always_t,
           typename ProtoAllocator = std::allocator<void>>
 struct cuda_executor {
-  struct cuda_dim {
+  struct shape_type {
     struct dim3 {
       unsigned int x, y, z;
-    } grid_dim, block_dim;
+    } grid_size, block_size;
   };
 
   template <typename Executor, InstanceOf<Executor, cuda_executor> = 0>
