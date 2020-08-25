@@ -32,7 +32,7 @@ struct executor_index {
 
 template <typename Executor>
 struct executor_index<Executor,
-                      executor::void_t<typename Executor::index_type>> {
+                      pcl::void_t<typename Executor::index_type>> {
   using type = typename Executor::index_type;
 };
 

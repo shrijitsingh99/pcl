@@ -79,7 +79,7 @@ template <typename Executor, typename Property>
 struct can_prefer<
     Executor,
     Property,
-    void_t<decltype(prefer(std::declval<Executor>(), std::declval<Property>()))>>
+    pcl::void_t<decltype(prefer(std::declval<Executor>(), std::declval<Property>()))>>
 : std::true_type {};
 
 template <typename Executor, typename Property>

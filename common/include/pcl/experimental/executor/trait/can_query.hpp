@@ -53,7 +53,7 @@ struct can_query : std::false_type {};
 template <typename Executor, typename Property>
 struct can_query<
     Executor, Property,
-    void_t<decltype(query(std::declval<Executor>(), std::declval<Property>()))>>
+    pcl::void_t<decltype(query(std::declval<Executor>(), std::declval<Property>()))>>
     : std::true_type {};
 
 template <typename Executor, typename Property>

@@ -283,7 +283,7 @@ namespace pcl
 #endif
 
   /**
-   * \todo: Remove in C++17
+   * \todo: Remove in C++20
    */
 #ifndef __cpp_lib_remove_cvref
   template <typename T>
@@ -291,4 +291,26 @@ namespace pcl
 #else
   using std::remove_cvref_t;
 #endif
+
+  /**
+  * \todo: Remove in C++17
+  */
+#ifndef __cpp_lib_void_t
+  template <typename...>
+  using void_t = void;
+#else
+  using std::void_t;
+#endif
+
+  /**
+   * \todo: Remove in C++17
+   */
+  // Implementation taken from
+  // https://stackoverflow.com/questions/31533469/check-a-parameter-pack-for-all-of-type-t
+  template <typename... Conds>
+  struct disjunction : std::false_type {};
+
+  template <typename Cond, typename... Conds>
+  struct disjunction<Cond, Conds...>
+  : std::conditional<Cond::value, std::true_type, disjunction<Conds...>>::type {};
 }

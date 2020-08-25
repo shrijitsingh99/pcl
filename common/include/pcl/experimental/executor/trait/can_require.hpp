@@ -74,7 +74,7 @@ struct can_require : std::false_type {};
 
 template <typename Executor, typename Property>
 struct can_require<Executor, Property,
-                   void_t<decltype(require(std::declval<Executor>(),
+                   pcl::void_t<decltype(require(std::declval<Executor>(),
                                            std::declval<Property>()))>>
     : std::true_type {};
 

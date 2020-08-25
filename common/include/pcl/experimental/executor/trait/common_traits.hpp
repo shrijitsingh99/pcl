@@ -11,30 +11,9 @@
 
 #include <tuple>
 #include <type_traits>
+#include <pcl/type_traits.h>
 
 namespace executor {
-
-/**
- *   Part of Standard Library in C++17 onwards
- **/
-
-// void_t
-template <typename...>
-using void_t = void;
-
-// remove_cv_ref_t
-template <typename T>
-using remove_cv_ref_t = std::remove_cv_t<std::remove_reference_t<T>>;
-
-// disjunction
-// https://stackoverflow.com/questions/31533469/check-a-parameter-pack-for-all-of-type-t
-template <typename... Conds>
-struct disjunction : std::false_type {};
-
-template <typename Cond, typename... Conds>
-struct disjunction<Cond, Conds...>
-    : std::conditional<Cond::value, std::true_type,
-                       disjunction<Conds...>>::type {};
 
 /**
  *   In accordance with equality_comparable concept in C++ 20
@@ -46,7 +25,7 @@ struct equality_comparable : std::false_type {};
 template <typename T1, typename T2>
 struct equality_comparable<
     T1, T2,
-    executor::void_t<decltype(std::declval<T1>() == std::declval<T2>(),
+    pcl::void_t<decltype(std::declval<T1>() == std::declval<T2>(),
                               std::declval<T2>() == std::declval<T1>(),
                               std::declval<T1>() != std::declval<T2>(),
                               std::declval<T2>() != std::declval<T1>())>>
@@ -60,35 +39,33 @@ constexpr bool equality_comparable_v = equality_comparable<T1, T2>::value;
  **/
 
 // is_instance_of_any
-namespace detail {
-
 template <typename Executor, template <typename...> class Type, typename = void>
-struct is_instance_of_any_impl : std::false_type {};
+struct is_instance_of : std::false_type {};
 
 template <template <typename...> class Executor,
-          template <typename...> class Type, typename... Args>
-struct is_instance_of_any_impl<
-    Executor<Args...>, Type,
+          template <typename...>
+          class Type,
+          typename... Args>
+struct is_instance_of<
+    Executor<Args...>,
+    Type,
     std::enable_if_t<std::is_base_of<Type<Args...>, Executor<Args...>>::value>>
-    : std::true_type {};
-
-}  // namespace detail
-
-template <typename Executor, template <typename...> class... Type>
-using is_instance_of_any =
-    executor::disjunction<detail::is_instance_of_any_impl<Executor, Type>...>;
-
-template <typename Executor, template <typename...> class... Type>
-constexpr bool is_instance_of_any_v =
-    is_instance_of_any<Executor, Type...>::value;
-
-template <typename Executor, template <typename...> class... Type>
-using InstanceOfAny =
-    std::enable_if_t<is_instance_of_any_v<Executor, Type...>, int>;
+: std::true_type {};
 
 template <typename Executor, template <typename...> class Type>
-using InstanceOf =
-std::enable_if_t<is_instance_of_any_v<Executor, Type>, int>;
+constexpr bool is_instance_of_v = is_instance_of<Executor, Type>::value;
+
+template <typename Executor, template <typename...> class Type>
+using InstanceOf = std::enable_if_t<is_instance_of_v<Executor, Type>, int>;
+
+template <typename Executor, template <typename...> class... Type>
+using is_instance_of_any = pcl::disjunction<is_instance_of<Executor, Type>...>;
+
+template <typename Executor, template <typename...> class... Type>
+constexpr bool is_instance_of_any_v = is_instance_of_any<Executor, Type...>::value;
+
+template <typename Executor, template <typename...> class... Type>
+using InstanceOfAny = std::enable_if_t<is_instance_of_any_v<Executor, Type...>, int>;
 
 // is_same_template
 namespace detail {
@@ -105,8 +82,8 @@ struct is_same_template_impl<Type<Args1...>, Type<Args2...>> : std::true_type {
 
 template <typename T1, typename T2>
 using is_same_template =
-    detail::is_same_template_impl<executor::remove_cv_ref_t<T1>,
-                                  executor::remove_cv_ref_t<T2>>;
+    detail::is_same_template_impl<pcl::remove_cvref_t<T1>,
+                                  pcl::remove_cvref_t<T2>>;
 
 // for_each_tuple_until
 // Iterate over tuple
@@ -146,7 +123,7 @@ struct tuple_contains_type_impl;
 
 template <typename T, typename... Us>
 struct tuple_contains_type_impl<T, std::tuple<Us...>>
-    : disjunction<std::is_same<T, Us>...> {};
+    : pcl::disjunction<std::is_same<T, Us>...> {};
 
 }  // namespace detail
 

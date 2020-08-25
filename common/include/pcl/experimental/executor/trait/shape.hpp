@@ -33,7 +33,7 @@ struct executor_shape {
 
 template <typename Executor>
 struct executor_shape<Executor,
-                      executor::void_t<typename Executor::shape_type>> {
+                      pcl::void_t<typename Executor::shape_type>> {
   using type = typename Executor::shape_type;
 };
 
