@@ -74,8 +74,8 @@ struct cuda_executor {
     pcl::utils::ignore(f, shape);
 #ifdef __CUDACC__
     void* global_kernel_args[] = {static_cast<void*>(&f)};
-    dim3 grid_size(shape.grid_dim.x, shape.grid_dim.y, shape.grid_dim.z);
-    dim3 block_size(shape.block_dim.x, shape.block_dim.y, shape.block_dim.z);
+    dim3 grid_size(shape.grid_size.x, shape.grid_size.y, shape.grid_size.z);
+    dim3 block_size(shape.block_size.x, shape.block_size.y, shape.block_size.z);
     cudaLaunchKernel(reinterpret_cast<void*>(global_kernel<F>), grid_size,
                      block_size, global_kernel_args, 0, nullptr);
     cudaDeviceSynchronize();
