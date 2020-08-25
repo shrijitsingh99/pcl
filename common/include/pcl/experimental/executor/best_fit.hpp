@@ -9,16 +9,15 @@
 
 #pragma once
 
-#include <pcl/experimental/executor/type_trait.h>
-
 #include <pcl/experimental/executor/cuda_executor.hpp>
 #include <pcl/experimental/executor/inline_executor.hpp>
 #include <pcl/experimental/executor/omp_executor.hpp>
 #include <pcl/experimental/executor/sse_executor.hpp>
-#include <thread>
+#include <pcl/experimental/executor/type_trait.h>
 
-#include <cstring>
+#include <boost/algorithm/string.hpp>
 #include <iostream>
+#include <thread>
 
 namespace executor {
 
@@ -39,7 +38,7 @@ struct executor_runtime_checks {
   static bool check(Executor& exec) {
     pcl::utils::ignore(exec);
     if (const char* env_p = std::getenv("PCL_ENABLE_SSE_EXEC"))
-      return strcasecmp(env_p, "ON") == 0;
+      return boost::iequals(env_p, "ON");
     return true;
   }
 
@@ -47,7 +46,7 @@ struct executor_runtime_checks {
             typename executor::InstanceOf<Executor, executor::omp_executor> = 0>
   static bool check(Executor& exec) {
     if (const char* env_p = std::getenv("PCL_ENABLE_OMP_EXEC"))
-      return strcasecmp(env_p, "OFF") == 0;
+      return !boost::iequals(env_p, "OFF");
 
     // If hardware_concurrency() fails to get the number of threads than set max
     // threads to 2 as a fallback to prevent unwanted scaling in machines with
