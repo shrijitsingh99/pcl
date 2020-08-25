@@ -110,6 +110,7 @@ set(common_incs
   include/pcl/common/point_tests.h
   include/pcl/common/synchronizer.h
   include/pcl/common/utils.h
+  include/pcl/common/tuple_utils.h
   include/pcl/common/geometry.h
   include/pcl/common/gaussian.h
   include/pcl/common/spring.h

@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <pcl/common/tuple_utils.h>
 #include <pcl/experimental/executor/cuda_executor.hpp>
 #include <pcl/experimental/executor/inline_executor.hpp>
 #include <pcl/experimental/executor/omp_executor.hpp>
@@ -16,6 +17,7 @@
 #include <pcl/experimental/executor/type_trait.h>
 
 #include <boost/algorithm/string.hpp>
+
 #include <iostream>
 #include <thread>
 
@@ -89,7 +91,7 @@ struct executor_predicate {
   template <typename T>
   struct condition<T,
                    std::enable_if_t<is_executor_instance_available<T>::value &&
-                                    tuple_contains_type<T, Supported>::value>>
+                                    pcl::tuple_contains_type<T, Supported>::value>>
       : std::true_type {};
 };
 
@@ -102,7 +104,7 @@ void enable_exec_with_priority(
   static_assert(std::is_base_of<executor_runtime_checks, RuntimeChecks>::value,
                 "Runtime checks should inherit from executor_runtime_checks");
   bool executor_selected = false;
-  executor::for_each_until_true(supported_execs, [&](auto& exec) {
+  pcl::for_each_until_true(supported_execs, [&](auto& exec) {
     if (RuntimeChecks::check(exec)) {
       executor_selected = detail::execute(f, exec);
       return executor_selected;
@@ -133,7 +135,7 @@ void enable_exec_on_desc_priority(
                 "Runtime checks should inherit from executor_runtime_checks");
 
   using predicate = detail::executor_predicate<decltype(supported_execs)>;
-  filter_tuple_values<predicate::template condition,
+  pcl::filter_tuple_values<predicate::template condition,
                       decltype(best_fit_executors)>
       filter_available;
 
