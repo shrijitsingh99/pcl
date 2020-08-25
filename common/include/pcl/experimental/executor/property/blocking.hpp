@@ -39,7 +39,7 @@ struct blocking_t : base_executor_property<blocking_t, false, false> {
     return !(a == b);
   }
 
-  constexpr blocking_t() : value_{0} {};
+  constexpr blocking_t() = default;
 
   struct always_t : base_executor_property<always_t, true, true> {
     static constexpr blocking_t value() { return {}; }
@@ -80,7 +80,7 @@ struct blocking_t : base_executor_property<blocking_t, false, false> {
 /**
  * \brief Used for having an order between the nested properties
  */
-  int value_;
+  int value_ = 0;
 };
 
 static constexpr blocking_t blocking{};
