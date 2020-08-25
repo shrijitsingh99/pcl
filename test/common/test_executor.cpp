@@ -70,8 +70,8 @@ TYPED_TEST(ExecutorProperties, executors)
   EXPECT_EQ(new_exec1.query(blocking), blocking_t::always);
 
   EXPECT_EQ(query(exec, executor::blocking_t::always), executor::blocking_t::always);
-  auto new_exec2 = require(exec, blocking_t::always);
-  EXPECT_EQ(query(new_exec2, blocking), blocking_t::always);
+  auto new_exec2 = require(exec, executor::blocking_t::always);
+  EXPECT_EQ(query(new_exec2, blocking), executor::blocking_t::always);
 }
 
 template <typename Executor>
@@ -90,8 +90,7 @@ TYPED_TEST(ExecutorExecute, executors)
 
   std::array<int, 3> c_vec = {0};
   exec.bulk_execute(
-      [&c_vec](auto idx) {
-        pcl::utils::ignore(idx);
+      [&c_vec](auto) {
         for (auto& val : c_vec)
           val = 1;
       },
