@@ -42,19 +42,15 @@ struct cuda_executor {
     } grid_dim, block_dim;
   };
 
-  using shape_type = cuda_dim;
-
   template <typename Executor, InstanceOf<Executor, cuda_executor> = 0>
-  friend bool operator==(const cuda_executor& lhs,
-                         const Executor& rhs) noexcept {
-    pcl::utils::ignore(lhs, rhs);
+  friend bool operator==(const cuda_executor&,
+                         const Executor&) noexcept {
     return std::is_same<cuda_executor, Executor>::value;
   }
 
   template <typename Executor, InstanceOf<Executor, cuda_executor> = 0>
   friend bool operator!=(const cuda_executor& lhs,
                          const Executor& rhs) noexcept {
-    pcl::utils::ignore(lhs, rhs);
     return !operator==(lhs, rhs);
   }
 

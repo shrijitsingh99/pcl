@@ -56,11 +56,9 @@ struct omp_executor {
   }
 
   template <typename Executor, InstanceOf<Executor, omp_executor> = 0>
-  friend bool operator==(const omp_executor& lhs,
-                         const Executor& rhs) noexcept {
-    pcl::utils::ignore(lhs, rhs);
+  friend bool operator==(const omp_executor&,
+                         const Executor&) noexcept {
     return std::is_same<omp_executor, Executor>::value;
-    pcl::utils::ignore(lhs, rhs);
   }
 
   template <typename Executor, InstanceOf<Executor, omp_executor> = 0>

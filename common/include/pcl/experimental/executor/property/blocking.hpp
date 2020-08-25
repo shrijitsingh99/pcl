@@ -46,6 +46,7 @@ struct blocking_t : base_executor_property<blocking_t, false, false> {
   };
 
   static constexpr always_t always{};
+
   constexpr blocking_t(const always_t&) : value_{1} {};
 
   struct never_t : base_executor_property<never_t, true, true> {
@@ -53,6 +54,7 @@ struct blocking_t : base_executor_property<blocking_t, false, false> {
   };
 
   static constexpr never_t never{};
+
   constexpr blocking_t(const never_t&) : value_{2} {};
 
   struct possibly_t : base_executor_property<possibly_t, true, true> {
@@ -60,6 +62,7 @@ struct blocking_t : base_executor_property<blocking_t, false, false> {
   };
 
   static constexpr possibly_t possibly{};
+
   constexpr blocking_t(const possibly_t&) : value_{3} {};
 
 /**

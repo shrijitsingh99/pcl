@@ -28,16 +28,14 @@ struct sse_executor {
   using shape_type = std::size_t;
 
   template <typename Executor, InstanceOf<Executor, sse_executor> = 0>
-  friend bool operator==(const sse_executor& lhs,
-                         const Executor& rhs) noexcept {
-    pcl::utils::ignore(lhs, rhs);
+  friend bool operator==(const sse_executor&,
+                         const Executor&) noexcept {
     return std::is_same<sse_executor, Executor>::value;
   }
 
   template <typename Executor, InstanceOf<Executor, sse_executor> = 0>
   friend bool operator!=(const sse_executor& lhs,
                          const Executor& rhs) noexcept {
-    pcl::utils::ignore(lhs, rhs);
     return !operator==(lhs, rhs);
   }
 
