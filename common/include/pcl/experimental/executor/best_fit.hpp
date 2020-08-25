@@ -38,7 +38,7 @@ struct executor_runtime_checks {
   static bool check(Executor& exec) {
     pcl::utils::ignore(exec);
     if (const char* env_p = std::getenv("PCL_ENABLE_SSE_EXEC"))
-      return boost::iequals(env_p, "ON");
+      return !boost::iequals(env_p, "OFF");
     return true;
   }
 
@@ -63,7 +63,7 @@ struct executor_runtime_checks {
   static bool check(Executor& exec) {
     pcl::utils::ignore(exec);
     if (const char* env_p = std::getenv("PCL_ENABLE_CUDA_EXEC"))
-      return strcasecmp(env_p, "ON") == 0;
+      return !boost::iequals(env_p, "OFF") == 0;
     return true;
   }
 };
