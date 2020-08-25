@@ -28,15 +28,13 @@ static const auto best_fit_executors =
 struct executor_runtime_checks {
   template <typename Executor, typename executor::InstanceOf<
                                    Executor, executor::inline_executor> = 0>
-  static bool check(Executor& exec) {
-    pcl::utils::ignore(exec);
+  static bool check(Executor&) {
     return true;
   }
 
   template <typename Executor,
             typename executor::InstanceOf<Executor, executor::sse_executor> = 0>
-  static bool check(Executor& exec) {
-    pcl::utils::ignore(exec);
+  static bool check(Executor&) {
     if (const char* env_p = std::getenv("PCL_ENABLE_SSE_EXEC"))
       return !boost::iequals(env_p, "OFF");
     return true;
@@ -60,8 +58,7 @@ struct executor_runtime_checks {
 
   template <typename Executor, typename executor::InstanceOf<
                                    Executor, executor::cuda_executor> = 0>
-  static bool check(Executor& exec) {
-    pcl::utils::ignore(exec);
+  static bool check(Executor&) {
     if (const char* env_p = std::getenv("PCL_ENABLE_CUDA_EXEC"))
       return !boost::iequals(env_p, "OFF") == 0;
     return true;
@@ -71,8 +68,7 @@ struct executor_runtime_checks {
 namespace detail {
 
 template <typename Function, typename Executor, typename = void>
-bool execute(Function&& f, Executor& exec) {
-  pcl::utils::ignore(f, exec);
+bool execute(Function&&, Executor&) {
   return false;
 }
 

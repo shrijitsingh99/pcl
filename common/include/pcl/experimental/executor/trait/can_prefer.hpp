@@ -61,9 +61,8 @@ template <typename Executor,
                   Property::is_preferable && !can_require_v<Executor, Property>,
               int> = 0>
 constexpr decltype(auto)
-prefer(const Executor& ex, const Property& p) noexcept
+prefer(const Executor& ex, const Property&) noexcept
 {
-  pcl::utils::ignore(p);
   return ex;
 }
 

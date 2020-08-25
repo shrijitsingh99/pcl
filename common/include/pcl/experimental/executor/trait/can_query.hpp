@@ -37,8 +37,7 @@ template <
     typename Executor, typename Property,
     typename std::enable_if_t<
         Property::template is_applicable_property<Executor>::value, int> = 0>
-constexpr auto query(Executor&& ex, const Property& p) noexcept {
-  pcl::utils::ignore(ex, p);
+constexpr auto query(Executor&&, const Property&) noexcept {
   return Property::template static_query<Executor>::value;
 }
 

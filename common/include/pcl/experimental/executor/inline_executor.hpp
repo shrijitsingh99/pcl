@@ -43,8 +43,7 @@ struct inline_executor {
   }
 
   template <typename F, typename... Args>
-  void bulk_execute(F&& f, const std::size_t& n) const {
-    pcl::utils::ignore(n);
+  void bulk_execute(F&& f, const std::size_t&) const {
     f(0);
   }
 
