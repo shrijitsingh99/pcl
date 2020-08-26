@@ -244,7 +244,15 @@ namespace pcl
     value = *reinterpret_cast<const ValT*>(data_ptr);
   }
 
-  template <typename ...> using void_t = void; // part of std in c++17
+  /**
+   * \todo: Remove in C++17
+   */
+#ifndef __cpp_lib_void_t
+  template <typename...>
+  using void_t = void;
+#else
+  using std::void_t;
+#endif
 
 #ifdef DOXYGEN_ONLY
 
@@ -290,16 +298,6 @@ namespace pcl
   using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 #else
   using std::remove_cvref_t;
-#endif
-
-  /**
-  * \todo: Remove in C++17
-  */
-#ifndef __cpp_lib_void_t
-  template <typename...>
-  using void_t = void;
-#else
-  using std::void_t;
 #endif
 
   /**
