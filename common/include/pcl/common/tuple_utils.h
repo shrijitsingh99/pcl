@@ -15,6 +15,7 @@
 
 namespace pcl {
 
+namespace detail {
 template <typename Tuple, typename Function>
 void
 for_each_until_true(
@@ -26,9 +27,9 @@ for_each_until_true(
 {}
 
 template <
-    std::size_t I,
     typename Tuple,
     typename Function,
+    std::size_t I,
     typename = typename std::enable_if<
         I != std::tuple_size<typename std::remove_reference<Tuple>::type>::value>::type>
 void
@@ -40,6 +41,7 @@ for_each_until_true(Tuple&& t, Function f, std::integral_constant<size_t, I>)
     for_each_until_true(
         std::forward<Tuple>(t), f, std::integral_constant<size_t, I + 1>());
 }
+} // namespace detail
 
 /**
  * \brief Iterates over all elements of tuples until the function called returns true
@@ -55,7 +57,7 @@ template <typename Tuple, typename Function>
 void
 for_each_until_true(Tuple&& t, Function f)
 {
-  for_each_until_true(std::forward<Tuple>(t), f, std::integral_constant<size_t, 0>());
+  detail::for_each_until_true(std::forward<Tuple>(t), f, std::integral_constant<size_t, 0>());
 }
 
 namespace detail {

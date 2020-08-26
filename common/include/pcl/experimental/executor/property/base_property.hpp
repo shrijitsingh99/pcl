@@ -60,7 +60,7 @@ struct base_executor_property {
  */
   template <typename T>
   struct is_applicable_property {
-    static constexpr bool value = executor::is_executor_v<T>;
+    static constexpr bool value = is_executor_v<T>;
   };
 
 /**
