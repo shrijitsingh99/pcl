@@ -14,7 +14,7 @@
 namespace executor {
 
 /**
- * \brief A behavioral property that guarantees executors provide about the
+ * \brief A behavioral property (P0443R13 2.2.12) that guarantees executors provide about the
  * blocking behavior of their execution functions.
  *
  * \details Provides 3 nested property which represent different blocking behaviours:
@@ -47,7 +47,7 @@ struct blocking_t : base_executor_property<blocking_t, false, false> {
 
   static constexpr always_t always{};
 
-  constexpr blocking_t(const always_t&) : value_{1} {};
+  constexpr blocking_t(const always_t&) : value_{ALWAYS} {};
 
   struct never_t : base_executor_property<never_t, true, true> {
     static constexpr blocking_t value() { return {}; }
@@ -55,7 +55,7 @@ struct blocking_t : base_executor_property<blocking_t, false, false> {
 
   static constexpr never_t never{};
 
-  constexpr blocking_t(const never_t&) : value_{2} {};
+  constexpr blocking_t(const never_t&) : value_{NEVER} {};
 
   struct possibly_t : base_executor_property<possibly_t, true, true> {
     static constexpr blocking_t value() { return {}; }
@@ -63,7 +63,7 @@ struct blocking_t : base_executor_property<blocking_t, false, false> {
 
   static constexpr possibly_t possibly{};
 
-  constexpr blocking_t(const possibly_t&) : value_{3} {};
+  constexpr blocking_t(const possibly_t&) : value_{POSISBLY} {};
 
 /**
  * \brief Default property value i.e. always
@@ -80,7 +80,7 @@ struct blocking_t : base_executor_property<blocking_t, false, false> {
 /**
  * \brief Used for having an order between the nested properties
  */
-  int value_ = 0;
+  const enum {DEFAULT, ALWAYS, NEVER, POSISBLY} value_ = DEFAULT;
 };
 
 static constexpr blocking_t blocking{};
