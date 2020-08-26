@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  *
  *  Point Cloud Library (PCL) - www.pointclouds.org
- *  Copyright (c) 2014-, Open Perception, Inc.
+ *  Copyright (c) 2020-, Open Perception, Inc.
  *
  */
 
@@ -15,44 +15,49 @@
 
 namespace pcl {
 
-// for_each_tuple_until
-// Iterate over tuple
-// https://stackoverflow.com/questions/26902633/how-to-iterate-over-a-stdtuple-in-c-11
-template <typename TupleType, typename FunctionType>
+template <typename Tuple, typename Function>
 void
 for_each_until_true(
-    TupleType&&,
-    FunctionType,
+    Tuple&&,
+    Function,
     std::integral_constant<
         std::size_t,
-        std::tuple_size<typename std::remove_reference<TupleType>::type>::value>)
+        std::tuple_size<typename std::remove_reference<Tuple>::type>::value>)
 {}
 
-template <std::size_t I,
-          typename TupleType,
-          typename FunctionType,
-          typename = typename std::enable_if<
-              I != std::tuple_size<
-                       typename std::remove_reference<TupleType>::type>::value>::type>
+template <
+    std::size_t I,
+    typename Tuple,
+    typename Function,
+    typename = typename std::enable_if<
+        I != std::tuple_size<typename std::remove_reference<Tuple>::type>::value>::type>
 void
-for_each_until_true(TupleType&& t, FunctionType f, std::integral_constant<size_t, I>)
+for_each_until_true(Tuple&& t, Function f, std::integral_constant<size_t, I>)
 {
-  bool exit = f(std::get<I>(std::forward<TupleType>(t)));
+  bool exit = f(std::get<I>(std::forward<Tuple>(t)));
 
   if (!exit)
     for_each_until_true(
-        std::forward<TupleType>(t), f, std::integral_constant<size_t, I + 1>());
+        std::forward<Tuple>(t), f, std::integral_constant<size_t, I + 1>());
 }
 
-template <typename TupleType, typename FunctionType>
+/**
+ * \brief Iterates over all elements of tuples until the function called returns true
+ *
+ * \tparam Tuple The tuple to iterate through
+ * \tparam Function A callable that is invoked for every tuple element and returns a
+ * boolean indicating whether to coninute iteration or not
+ *
+ * \remark Implementation taken from
+ * https://stackoverflow.com/questions/26902633/how-to-iterate-over-a-stdtuple-in-c-11
+ */
+template <typename Tuple, typename Function>
 void
-for_each_until_true(TupleType&& t, FunctionType f)
+for_each_until_true(Tuple&& t, Function f)
 {
-  for_each_until_true(
-      std::forward<TupleType>(t), f, std::integral_constant<size_t, 0>());
+  for_each_until_true(std::forward<Tuple>(t), f, std::integral_constant<size_t, 0>());
 }
 
-// tuple_contains_type
 namespace detail {
 
 template <typename T, typename Tuple>
@@ -64,29 +69,35 @@ struct tuple_contains_type_impl<T, std::tuple<Us...>>
 
 } // namespace detail
 
+/**
+ * \brief Checks whether a tuple contains a specified type
+ *
+ * \tparam T a type to check for
+ * \tparam Tuple a tuple in which to check for the type
+ *
+ */
 template <typename T, typename Tuple>
 using tuple_contains_type = typename detail::tuple_contains_type_impl<T, Tuple>::type;
 
-// filter_tuple_values
 namespace detail {
 
-template <template <typename...> class predicate, typename... T>
+template <template <typename...> class Predicate, typename... TupleElements>
 struct filter_tuple_values_impl {
   using type = decltype(std::tuple_cat(
-      typename std::conditional<predicate<T>::value, std::tuple<T>, std::tuple<>>::
+      typename std::conditional<Predicate<TupleElements>::value, std::tuple<TupleElements>, std::tuple<>>::
           type()...));
 
   auto
-  operator()(const std::tuple<T...>& in)
+  operator()(const std::tuple<TupleElements...>& in)
   {
     return (*this)(in, type{});
   }
 
 private:
-  // neat utility function to fetch the types we're interest in outputting
+  // Utility function to fetch the types we're interest in outputting
   template <typename... To>
   auto
-  operator()(const std::tuple<T...>& in, std::tuple<To...>)
+  operator()(const std::tuple<TupleElements...>& in, std::tuple<To...>)
   {
     return std::make_tuple(std::get<To>(in)...);
   }
@@ -94,15 +105,23 @@ private:
 
 } // namespace detail
 
-template <template <typename...> class predicate, typename T>
+/**
+ * \brief Filters elements of a tuple based on the predicate/condition
+ *
+ * \tparam Predicate A trait which takes a tuple element as parameter and defines a
+ * boolean member value which dictates whether to filter the tuple element or not
+ * \tparam Tuple a tuple to filter
+ *
+ */
+template <template <typename...> class Predicate, typename Tuple>
 struct filter_tuple_values;
 
-template <template <typename...> class predicate, typename... T>
-struct filter_tuple_values<predicate, std::tuple<T...>>
-: detail::filter_tuple_values_impl<predicate, T...> {};
+template <template <typename...> class Predicate, typename... TupleElements>
+struct filter_tuple_values<Predicate, std::tuple<TupleElements...>>
+: detail::filter_tuple_values_impl<Predicate, TupleElements...> {};
 
-template <template <typename...> class predicate, typename... T>
-struct filter_tuple_values<predicate, const std::tuple<T...>>
-: detail::filter_tuple_values_impl<predicate, T...> {};
+template <template <typename...> class Predicate, typename... TupleElements>
+struct filter_tuple_values<Predicate, const std::tuple<TupleElements...>>
+: detail::filter_tuple_values_impl<Predicate, TupleElements...> {};
 
 } // namespace pcl
