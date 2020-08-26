@@ -46,7 +46,8 @@ struct executor_runtime_checks {
             typename executor::InstanceOf<Executor, executor::omp_executor> = 0>
   static bool check(Executor& exec) {
     if (const char* env_p = std::getenv("PCL_ENABLE_OMP_EXEC"))
-      return !boost::iequals(env_p, "OFF");
+      if (boost::iequals(env_p, "OFF"))
+        return false;
 
     // If hardware_concurrency() fails to get the number of threads than set max
     // threads to 2 as a fallback to prevent unwanted scaling in machines with
