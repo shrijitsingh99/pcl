@@ -15,6 +15,7 @@
 
 #include <pcl/experimental/executor/property.h>
 #include <pcl/experimental/executor/type_trait.h>
+#include <pcl/types.h>
 
 namespace pcl {
 namespace executor {
@@ -41,7 +42,7 @@ template <typename Blocking = blocking_t::always_t,
 struct cuda_executor {
   struct shape_type {
     struct dim3 {
-      unsigned int x, y, z;
+      uindex_t x, y, z;
     } grid_size, block_size;
   };
 

@@ -16,6 +16,7 @@
 #include <pcl/console/print.h>
 #include <pcl/experimental/executor/property.h>
 #include <pcl/experimental/executor/type_trait.h>
+#include <pcl/types.h>
 
 namespace pcl {
 namespace executor {
@@ -31,14 +32,14 @@ struct is_executor_available<omp_executor> : std::true_type {};
 template <typename Blocking = blocking_t::always_t,
           typename ProtoAllocator = std::allocator<void>>
 struct omp_executor {
-  using shape_type = std::size_t;
+  using shape_type = uindex_t;
 
   struct index_type {
     shape_type max;
-    int idx;
+    shape_type idx;
   };
 
-  std::size_t max_threads = 0;
+  uindex_t max_threads = 0;
 
   omp_executor() : omp_executor(0) {}
 
@@ -53,7 +54,7 @@ struct omp_executor {
   set_max_threads(std::size_t max_threads)
   {
 #ifdef _OPENMP
-      this->max_threads = max_threads ? max_threads :  omp_get_max_threads();
+    this->max_threads = max_threads ? max_threads : omp_get_max_threads();
     return true;
 #endif
     return false;
