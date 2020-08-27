@@ -36,25 +36,23 @@ struct omp_executor {
 
   struct index_type {
     shape_type max;
-    shape_type idx;
+    int idx; // TODO: Switch to sindex_t
   };
 
-  uindex_t max_threads = 0;
+  shape_type max_threads = 0;
 
   omp_executor() : omp_executor(0) {}
 
-  omp_executor(std::size_t max_threads) : max_threads(max_threads)
+  omp_executor(shape_type threads) : max_threads(threads)
   {
-#ifdef _OPENMP
-    set_max_threads(max_threads);
-#endif
+    set_max_threads(threads);
   }
 
   bool
-  set_max_threads(uindex_t max_threads)
+  set_max_threads(shape_type threads)
   {
 #ifdef _OPENMP
-    this->max_threads = max_threads ? max_threads : static_cast<uindex_t>(omp_get_max_threads());
+    max_threads = threads ? threads : omp_get_max_threads();
     return true;
 #endif
     return false;
@@ -98,7 +96,7 @@ struct omp_executor {
 
 #pragma omp parallel num_threads(num_threads)
     {
-      index_type index{num_threads, static_cast<uindex_t>(omp_get_thread_num())};
+      index_type index{num_threads, omp_get_thread_num()};
       f(index);
     }
 #endif
