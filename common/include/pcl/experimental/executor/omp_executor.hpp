@@ -51,10 +51,10 @@ struct omp_executor {
   }
 
   bool
-  set_max_threads(std::size_t max_threads)
+  set_max_threads(uindex_t max_threads)
   {
 #ifdef _OPENMP
-    this->max_threads = max_threads ? max_threads : omp_get_max_threads();
+    this->max_threads = max_threads ? max_threads : static_cast<uindex_t>(omp_get_max_threads());
     return true;
 #endif
     return false;
@@ -98,7 +98,7 @@ struct omp_executor {
 
 #pragma omp parallel num_threads(num_threads)
     {
-      index_type index{num_threads, omp_get_thread_num()};
+      index_type index{num_threads, static_cast<uindex_t>(omp_get_thread_num())};
       f(index);
     }
 #endif
