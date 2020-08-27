@@ -27,14 +27,14 @@ struct inline_executor {
   using shape_type = std::size_t;
 
   template <typename Executor, InstanceOf<Executor, inline_executor> = 0>
-  friend bool
+  friend constexpr bool
   operator==(const inline_executor&, const Executor&) noexcept
   {
     return std::is_same<inline_executor, Executor>::value;
   }
 
   template <typename Executor, InstanceOf<Executor, inline_executor> = 0>
-  friend bool
+  friend constexpr bool
   operator!=(const inline_executor& lhs, const Executor& rhs) noexcept
   {
     return !operator==(lhs, rhs);

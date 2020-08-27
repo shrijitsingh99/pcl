@@ -53,24 +53,21 @@ struct omp_executor {
   set_max_threads(std::size_t max_threads)
   {
 #ifdef _OPENMP
-    if (!max_threads)
-      this->max_threads = omp_get_max_threads();
-    else
-      this->max_threads = max_threads;
+      this->max_threads = max_threads ? max_threads :  omp_get_max_threads();
     return true;
 #endif
     return false;
   }
 
   template <typename Executor, InstanceOf<Executor, omp_executor> = 0>
-  friend bool
+  friend constexpr bool
   operator==(const omp_executor&, const Executor&) noexcept
   {
     return std::is_same<omp_executor, Executor>::value;
   }
 
   template <typename Executor, InstanceOf<Executor, omp_executor> = 0>
-  friend bool
+  friend constexpr bool
   operator!=(const omp_executor& lhs, const Executor& rhs) noexcept
   {
     return !operator==(lhs, rhs);
