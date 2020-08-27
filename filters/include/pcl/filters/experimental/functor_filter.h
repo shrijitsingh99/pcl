@@ -99,22 +99,20 @@ public:
     auto cond_filtering = [&](executor::executor_index_t<Executor> index) {
       pcl::utils::ignore(index);
 #pragma omp for
-      for (std::ptrdiff_t idx = 0; idx < indices_->size(); ++idx) {
-        if (negative_ != functor_(*input_, idx)) {
+      for (uindex_t idx = 0; idx < indices_->size(); ++idx) {
+        if (negative_ != functor_(*input_, (*indices_)[idx])) {
           keep[idx] = true;
         }
       }
     };
 
     exec.bulk_execute(cond_filtering, 0);
-    extractMarkedIndices(exec, indices, keep);
+    extractMarkedIndices(indices, keep);
   }
 
 private:
-  template <typename Executor, typename executor::InstanceOfAny<Executor, executor::inline_executor, executor::omp_executor> = 0>
-  void extractMarkedIndices(const Executor &exec, Indices& indices, const std::vector<std::uint8_t>& keep) {
-    pcl::utils::ignore(exec);
-    for (index_t i = 0; i < keep.size(); ++i) {
+  void extractMarkedIndices(Indices& indices, const std::vector<std::uint8_t>& keep) {
+    for (uindex_t i = 0; i < keep.size(); ++i) {
       if (keep[i])
         indices.push_back((*indices_)[i]);
       else if (extract_removed_indices_)

@@ -36,8 +36,14 @@ TEST(FunctorFilterTrait, CheckCompatibility)
 }
 
 template <typename T>
-class FunctorFilterExecutor : public ::testing::Test {
-public:
+struct FunctorFilterExecutor : public ::testing::Test {
+
+  shared_ptr<PointCloud<PointXYZ>> cloud;
+  shared_ptr<Indices> indices;
+  PointCloud<PointXYZ> negative_cloud, positive_cloud;
+  Indices out_indices;
+  std::array<std::uint32_t, 3> seeds = {123, 456, 789};
+
   void
   SetUp() override
   {
@@ -45,9 +51,11 @@ public:
   }
 
   void
-  fillCloud(std::uint32_t seed)
+  fillCloud(const std::uint32_t seed)
   {
-    cloud = make_shared<PointCloud<PointXYZ>>();
+    cloud->clear();
+    negative_cloud.clear(); // suppress console warnings
+    positive_cloud.clear(); // suppress console warnings
 
     common::CloudGenerator<PointXYZ, common::UniformGenerator<float>> generator{
         {-10., 0., seed}};
@@ -55,19 +63,24 @@ public:
     generator.setParameters({0., 10., seed});
     generator.fill(10, 10, positive_cloud);
     *cloud = negative_cloud + positive_cloud;
+
+    // Build indices selection, fetching the second half of the negative cloud
+    // and the first half of the positive cloud
+    indices = make_shared<Indices>();
+    indices->reserve(cloud->size() / 2);
+    for (index_t i = negative_cloud.size() / 2;
+         i < negative_cloud.size() + positive_cloud.size() / 2;
+         ++i) {
+      indices->push_back(i);
+    }
   }
-
-  shared_ptr<PointCloud<PointXYZ>> cloud;
-  PointCloud<PointXYZ> out_cloud, negative_cloud, positive_cloud;
-  std::array<std::uint32_t, 3> seeds = {123, 456, 789};
-
   template <typename Executor,
             typename Filter,
             typename std::enable_if<std::is_same<Executor, void>::value, int>::type = 0>
   void
-  executeFilter(Filter& filter)
+  executeFilter(Filter& filter, Indices& indices)
   {
-    filter.filter(this->out_cloud);
+    filter.filter(indices);
   }
 
   template <
@@ -75,10 +88,9 @@ public:
       typename Filter,
       typename std::enable_if<!std::is_same<Executor, void>::value, int>::type = 0>
   void
-  executeFilter(Filter& filter)
+  executeFilter(Filter& filter, Indices& indices)
   {
-    const Executor exec;
-    filter.filter(exec, this->out_cloud);
+    filter.filter(Executor{}, indices);
   }
 
   template <typename Executor = void>
@@ -90,28 +102,52 @@ public:
       return (pt.getArray3fMap() < 0).all();
     };
 
+    const auto compare_indices =
+        [](const auto first, const auto last, const index_t start) {
+          index_t i = start;
+          for (auto it = first; it != last; ++it, ++i)
+            ASSERT_EQ(*it, i);
+        };
+
     for (const auto& keep_removed : {true, false}) {
       FunctorFilter<PointXYZ, decltype(lambda)> filter{lambda, keep_removed};
       filter.setInputCloud(this->cloud);
+      filter.setIndices(this->indices);
       const auto removed_size = filter.getRemovedIndices()->size();
 
       filter.setNegative(false);
-      executeFilter<Executor>(filter);
+      executeFilter<Executor>(filter, this->out_indices);
 
-      EXPECT_EQ(this->out_cloud.size(), this->negative_cloud.size());
+      EXPECT_EQ(this->out_indices.size(), this->negative_cloud.size() / 2);
+      compare_indices(this->out_indices.cbegin(),
+                      this->out_indices.cend(),
+                      this->negative_cloud.size() / 2);
+
       if (keep_removed) {
-        EXPECT_EQ(filter.getRemovedIndices()->size(), this->positive_cloud.size());
+        const auto& removed_indices = filter.getRemovedIndices();
+        EXPECT_EQ(removed_indices->size(), this->positive_cloud.size() / 2);
+        compare_indices(removed_indices->cbegin(),
+                        removed_indices->cend(),
+                        this->negative_cloud.size());
       }
       else {
         EXPECT_EQ(filter.getRemovedIndices()->size(), removed_size);
       }
 
       filter.setNegative(true);
-      executeFilter<Executor>(filter);
+      executeFilter<Executor>(filter, this->out_indices);
 
-      EXPECT_EQ(this->out_cloud.size(), this->positive_cloud.size());
+      EXPECT_EQ(this->out_indices.size(), this->positive_cloud.size() / 2);
+      compare_indices(this->out_indices.cbegin(),
+                      this->out_indices.cend(),
+                      this->negative_cloud.size());
+
       if (keep_removed) {
-        EXPECT_EQ(filter.getRemovedIndices()->size(), this->negative_cloud.size());
+        const auto& removed_indices = filter.getRemovedIndices();
+        EXPECT_EQ(removed_indices->size(), this->negative_cloud.size() / 2);
+        compare_indices(removed_indices->cbegin(),
+                        removed_indices->cend(),
+                        this->negative_cloud.size() / 2);
       }
       else {
         EXPECT_EQ(filter.getRemovedIndices()->size(), removed_size);
