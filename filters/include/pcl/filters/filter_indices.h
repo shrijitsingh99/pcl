@@ -126,7 +126,7 @@ namespace pcl
                           decltype(&DerivedFilter::template applyFilter<Executor>),
                           DerivedFilter&,
                           Executor const&,
-                          PointCloud&>,
+                          Indices&>,
                       "An executor overload for applyFilter doesn't exist.");
 
         auto filterCloud = [exec, this](Indices& indices) {
