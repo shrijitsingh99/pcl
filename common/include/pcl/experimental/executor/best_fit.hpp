@@ -80,6 +80,19 @@ struct executor_runtime_checks {
 
 namespace detail {
 
+#ifdef DOXYGEN_ONLY
+/**
+ * \brief A helper function to invoke the callable with the specified executor
+ * if that the executor is available (See \ref is_executor_available)
+ *
+ * \param Function a callable which is invoked with the specified executor
+ * \param Executor an executor
+ * \return a boolean indicating whether the callable was invoked or not
+ */
+template <typename Function, typename Executor>
+bool
+execute(Function&& f, Executor& exec);
+#else
 template <typename Function, typename Executor, typename = void>
 bool
 execute(Function&&, Executor&)
@@ -89,8 +102,7 @@ execute(Function&&, Executor&)
 
 template <
     typename Function,
-    template <typename...>
-    class Executor,
+    template <typename...> class Executor,
     typename... Properties,
     typename std::enable_if<executor::is_executor_available_v<Executor>, int>::type = 0>
 bool
@@ -99,6 +111,7 @@ execute(Function&& f, Executor<Properties...>& exec)
   f(exec);
   return true;
 }
+#endif
 
 template <typename Supported>
 struct executor_predicate {
@@ -107,13 +120,42 @@ struct executor_predicate {
 
   template <typename T>
   struct condition<T,
-                   std::enable_if_t<is_executor_instance_available<T>::value &&
+                   std::enable_if_t<is_executor_instance_available_v<T> &&
                                     pcl::tuple_contains_type<T, Supported>::value>>
   : std::true_type {};
 };
 
 } // namespace detail
 
+/**
+ * \brief Selects an executor from the specified list of supported executors
+ * based on the provided runtime checks and priority and then invokes the
+ * callable with the selected executor as the argument.
+ *
+ * \details This function provides a mechanism for the best fitting
+ * executor to execute the specified callable to get selected.
+ *
+ * The supported executors which are specified serve two purposes, one
+ * being two provide a list of executor types which have valid overloads for
+ * the specified callable, the second being that the order in which the
+ * executors are specified indicates the priority (descending order of priority)
+ * of each executor.
+ *
+ * For each supported executor a set of runtime checks are performed one by one
+ * (highest to lowest priority) until one of the checks passes, and that executor
+ * is selected.
+ * Custom runtime checks can be create be deriving from the class
+ * \ref executor_runtime_checks and can be passed as a template parameter
+ * to this function.
+ *
+ * Finally, the selected executor is passed as an argument to the callable and
+ * the callable is invoked.
+ *
+ * \tparam RuntimeChecks runtime checks to be performed on each executor
+ * \param Function a callable which is invoked with the selected executor
+ * \param std::tuple<SupportedExecutors...> a tuple of supported executor types
+ * arranged in descending order of priority
+ */
 template <typename RuntimeChecks = executor_runtime_checks,
           typename Function,
           typename... SupportedExecutors>
@@ -141,6 +183,35 @@ enable_exec_with_priority(Function&& f,
               << std::endl;
 }
 
+/**
+ * \brief Selects an executor from the specified list of supported executors
+ * based on the provided runtime checks and priority and then invokes the
+ * callable with the selected executor as the argument.
+ *
+ * \details This function provides a mechanism for the best fitting
+ * executor to execute the specified callable to get selected.
+ *
+ * The supported executors which are specified serve two purposes, one
+ * being two provide a list of executor types which have valid overloads for
+ * the specified callable, the second being that the order in which the
+ * executors are specified indicates the priority (descending order of priority)
+ * of each executor.
+ *
+ * For each supported executor a set of runtime checks are performed one by one
+ * (highest to lowest priority) until one of the checks passes, and that executor
+ * is selected.
+ * Custom runtime checks can be create be deriving from the class
+ * \ref executor_runtime_checks and can be passed as a template parameter
+ * to this function.
+ *
+ * Finally, the selected executor is passed as an argument to the callable and
+ * the callable is invoked.
+ *
+ * \tparam RuntimeChecks runtime checks to be performed on each executor
+ * \param Function a callable which is invoked with the selected executor
+ * \param SupportedExecutors a parameter pack of supported executor types
+ * arranged in descending order of priority
+ */
 template <typename RuntimeChecks = executor_runtime_checks,
           typename Function,
           typename... SupportedExecutors>
@@ -150,6 +221,34 @@ enable_exec_with_priority(Function&& f, SupportedExecutors&&... execs)
   enable_exec_with_priority<RuntimeChecks>(f, std::make_tuple(execs...));
 }
 
+/**
+ * \brief Selects an executor from the specified list of supported executors
+ * based on the provided runtime checks and then invokes the
+ * callable with the selected executor as the argument.
+ *
+ * \details This function provides a mechanism for the best fitting
+ * executor to execute the specified callable to get selected.
+ *
+ * The supported executors which are is used to provide a list of executor
+ * types which have valid overloads for the specified callable.
+ *
+ * The priority if the supported executor is set according to the order
+ * of the executors in \ref best_fit_executors in descending order.
+ *
+ * For each supported executor a set of runtime checks are performed one by one
+ * (highest to lowest priority) until one of the checks passes, and that executor
+ * is selected.
+ * Custom runtime checks can be create be deriving from the class
+ * \ref executor_runtime_checks and can be passed as a template parameter
+ * to this function.
+ *
+ * Finally, the selected executor is passed as an argument to the callable and
+ * the callable is invoked.
+ *
+ * \tparam RuntimeChecks runtime checks to be performed on each executor
+ * \param Function a callable which is invoked with the selected executor
+ * \param std::tuple<SupportedExecutors...> a tuple of supported executor types
+ */
 template <typename RuntimeChecks = executor_runtime_checks,
           typename Function,
           typename... SupportedExecutors>
@@ -169,6 +268,34 @@ enable_exec_on_desc_priority(Function&& f,
   enable_exec_with_priority(f, filtered);
 }
 
+/**
+ * \brief Selects an executor from the specified list of supported executors
+ * based on the provided runtime checks and then invokes the
+ * callable with the selected executor as the argument.
+ *
+ * \details This function provides a mechanism for the best fitting
+ * executor to execute the specified callable to get selected.
+ *
+ * The supported executors which are is used to provide a list of executor
+ * types which have valid overloads for the specified callable.
+ *
+ * The priority if the supported executor is set according to the order
+ * of the executors in \ref best_fit_executors in descending order.
+ *
+ * For each supported executor a set of runtime checks are performed one by one
+ * (highest to lowest priority) until one of the checks passes, and that executor
+ * is selected.
+ * Custom runtime checks can be create be deriving from the class
+ * \ref executor_runtime_checks and can be passed as a template parameter
+ * to this function.
+ *
+ * Finally, the selected executor is passed as an argument to the callable and
+ * the callable is invoked.
+ *
+ * \tparam RuntimeChecks runtime checks to be performed on each executor
+ * \param Function a callable which is invoked with the selected executor
+ * \param SupportedExecutors a parameter pack of supported executor types
+ */
 template <typename RuntimeChecks = executor_runtime_checks,
           typename Function,
           typename... SupportedExecutors>

@@ -19,29 +19,34 @@ namespace pcl {
 namespace executor {
 
 /**
- * \brief Enforces a specified Property on an Executor if possible else returns
- * the same Executor.
+ * \brief Enforces a specified property on an executor if possible else returns
+ * the same executor.
  *
  * \details If enforced a new executor instance which implements that
  * property is created and returned. prefer denotes a customization point and
  * should satisfy the following conditions to be applicable:
- * 1. The Property should be applicable and preferable which can be checked
- * using Property::template is_applicable_property<Executor>::value and
- * Property::is_preferable
- * 2. The expression Property::template static_query<Executor>::value ==
- * Property::value() should be true, which implies that the Executor supports
- * that property
+ * 1. The Property should be applicable and preferable which can be checked using
+ * \ref base_executor_property::is_applicable_property
+ * "Property::template is_applicable_property<Executor>::value" and
+ * \ref base_executor_property::is_preferable "Property::is_preferable"
+ * 2. The expression
+ * \ref base_executor_property::static_query
+ * "Property::template static_query<Executor>::value" == Property::value() should
+ * be true, which implies that the executor supports that property
  *
  * If all the above conditions are met, prefer customization point is valid.
- * If it is possible, then the require customization point is called
- * and the Property is enforced for the Executor. If the above case is not
- * possible, then the same Executor is returned.
+ * If it is possible, then the require customization point is invoked
+ * and the property is enforced for the executor. If the above case is not
+ * possible, then the same executor is returned.
  *
  * Part of Proposal P1393R0
  *
  * \todo
- * 1. Support multiple querying multiple properties in the trait: template
- * <typename Executor, typename... Properties>
+ * 1. Support multiple querying multiple properties in the trait:
+ * template <typename Executor, typename... Properties>
+ *
+ * \tparam Executor an executor to try and enforce the property on
+ * \tparam Property the property to try enforce
  */
 template <typename Executor,
           typename Property,
@@ -68,12 +73,15 @@ prefer(const Executor& ex, const Property&) noexcept
 }
 
 /**
- * \brief Checks whether the given Property and Executor support the prefer
+ * \brief Checks whether the given Property and Executor support the \ref prefer
  * customization point.
  *
  * Part of Proposal P1393R0
+ *
+ * \tparam Executor an executor to check the property for
+ * \tparam Property a property to check
  */
-template <typename Executor, typename Properties, typename = void>
+template <typename Executor, typename Property, typename = void>
 struct can_prefer : std::false_type {};
 
 template <typename Executor, typename Property>

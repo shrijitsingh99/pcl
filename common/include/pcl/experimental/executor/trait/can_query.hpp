@@ -18,22 +18,26 @@ namespace pcl {
 namespace executor {
 
 /**
- * \brief Checks whether a specified Property on an Executor is supported by the
- * Executor.
+ * \brief Checks whether a specified Property is supported by the executor.
  *
  * \details If supported it returns the current instance of that Property.
  * prefer denotes a customization point and should satisfy the following
  * conditions to be applicable:
  * 1. The Property should be applicable which can be checked using
- * Property::template is_applicable_property<Executor>::value
- * 2. The expression Property::template static_query<Executor>::value should be
- * a valid constant expression
+ * \ref base_executor_property::is_applicable_property
+ * "Property::template is_applicable_property<Executor>::value"
+ * 2. The expression
+ * \ref base_executor_property::static_query
+ * "Property::template static_query<Executor>::value" should be a valid
+ * constant expression
  *
  * If all the above conditions are met, then the overload query member function
- * in the Executor is called with the Property.
+ * in the executor is called with the Property.
  *
  * Part of Proposal P1393R0
  *
+ * \tparam Executor an executor to query the property on
+ * \tparam Property the property to query
  */
 template <typename Executor,
           typename Property,
@@ -47,10 +51,13 @@ query(Executor&&, const Property&) noexcept
 }
 
 /**
- * \brief Checks whether the given Property and Executor support the query
+ * \brief Checks whether the given property and executor support the query
  * customization point.
  *
  * Part of Proposal P1393R0
+ *
+ * \tparam Executor an executor to check the property for
+ * \tparam Property a property to check
  */
 template <typename Executor, typename Properties, typename = void>
 struct can_query : std::false_type {};

@@ -15,7 +15,7 @@ namespace pcl {
 namespace executor {
 
 /**
- * \brief A behavioral property (P0443R13 2.2.12) that guarantees executors provide
+ * \brief A behavioral property (P0443R13 - 2.2.12) that guarantees executors provide
  * about the blocking behavior of their execution functions.
  *
  * \details Blocking behaviour here refers to whether or not the execution function

@@ -38,7 +38,12 @@ struct allocator_t : base_executor_property<allocator_t<ProtoAllocator>, true, t
 private:
   ProtoAllocator alloc_;
 };
-
+/**
+ * \brief A specialization of \ref allocator_t that indicates the executor shall use
+ * the default allocator
+ *
+ * Part of Proposal P0443R13 (2.2.13)
+ */
 template <>
 struct allocator_t<void> : base_executor_property<allocator_t<void>, true, true> {
   template <class ProtoAllocator>

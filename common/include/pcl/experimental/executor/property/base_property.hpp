@@ -21,16 +21,19 @@ namespace executor {
  * needed by all properties
  *
  * \details A base class was needed as each property needed to specify a minimum
- * set of functionality such as is_applicable_property, static query,
- * is_requirable, is_preferable etc. which would lead to code duplication
- * without a base class.
+ * set of functionality such as
+ * \ref base_executor_property::is_applicable_property "is_applicable_property",
+ * \ref base_executor_property::static_query "static query",
+ * \ref base_executor_property::is_requirable "is_requirable",
+ * \ref base_executor_property::is_preferable "is_preferable" etc.
+ * which would lead to code duplication without a base class.
  *
  * A CRTP design is used as static query needs to be able to access the
  * DerivedProperty in order to call the overloaded query member function in an
  * executor. It also allows to specify on a property basis whether it is
- * requirable and preferable. This is useful for behavioral properties (P0443R13
- * - 2.2.12) which are not requirable nor preferable unlike the properties
- * nested in them.
+ * requirable and preferable.
+ * This is useful for behavioral properties (P0443R13- 2.2.12)
+ * which are not requirable nor preferable unlike the properties nested in them.
  */
 template <typename DerivedProperty, bool requireable, bool preferable>
 struct base_executor_property {
