@@ -18,7 +18,10 @@ namespace executor {
  * \brief A behavioral property (P0443R13 2.2.12) that guarantees executors provide
  * about the blocking behavior of their execution functions.
  *
- * \details Provides 3 nested property which represent different blocking behaviours:
+ * \details Blocking behaviour here refers to whether or not the execution function
+ * should return immediately after invoking the callable.
+ * The blocking property provides 3 nested property which represent different blocking
+ * behaviours:
  * 1. Possible - May or may not block depending on context no guarantees are made
  * 2. Always - Always blocking
  * 3. Never - Never blocking

@@ -17,9 +17,10 @@ namespace pcl {
 namespace executor {
 
 /**
- *   In accordance with equality_comparable concept in C++ 20
+ *   \breif In accordance with the named requirement EqualityComparable which
+ *   will be formalized in C++20 using concepts
+ *   Requirements: https://en.cppreference.com/w/cpp/named_req/EqualityComparable
  **/
-
 template <typename T1, typename T2, typename = void>
 struct equality_comparable : std::false_type {};
 
