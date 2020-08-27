@@ -38,7 +38,8 @@ struct executor_runtime_checks {
             typename executor::InstanceOf<Executor, executor::sse_executor> = 0>
   static bool check(Executor&) {
     if (const char* env_p = std::getenv("PCL_ENABLE_SSE_EXEC"))
-      return !boost::iequals(env_p, "OFF");
+      if (boost::iequals(env_p, "OFF"))
+        return false;
     return true;
   }
 
@@ -63,7 +64,8 @@ struct executor_runtime_checks {
                                    Executor, executor::cuda_executor> = 0>
   static bool check(Executor&) {
     if (const char* env_p = std::getenv("PCL_ENABLE_CUDA_EXEC"))
-      return !boost::iequals(env_p, "OFF") == 0;
+      if (boost::iequals(env_p, "OFF"))
+        return false;
     return true;
   }
 };
