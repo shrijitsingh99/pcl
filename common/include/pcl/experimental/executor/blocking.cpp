@@ -8,14 +8,17 @@
  */
 #include <pcl/experimental/executor/property/blocking.hpp>
 
+namespace pcl {
 namespace executor {
 /**
  * \todo Can inline member variable in C++17 into blocking.hpp, eliminating
  * need for separate CPP file.
- * Workaround: https://stackoverflow.com/questions/8016780/undefined-reference-to-static-constexpr-char
+ * Workaround:
+ * https://stackoverflow.com/questions/8016780/undefined-reference-to-static-constexpr-char
  * inline constexpr blocking_t::possibly_t blocking_t::possibly;
  */
 constexpr blocking_t::possibly_t blocking_t::possibly;
 constexpr blocking_t::always_t blocking_t::always;
 constexpr blocking_t::never_t blocking_t::never;
-}  // namespace executor
+} // namespace executor
+} // namespace pcl

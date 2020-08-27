@@ -9,14 +9,15 @@
 
 #pragma once
 
+namespace pcl {
 namespace executor {
 
 /**
  * \brief A given Executor can have a custom shape for bulk execute.
  *
- * \details By default if not explicitly specified by the executor the shape is std::size_t.
- * The shape represents the number of execution units and their dimensionality if
- * needed.
+ * \details By default if not explicitly specified by the executor the shape is
+ * std::size_t. The shape represents the number of execution units and their
+ * dimensionality if needed.
  *
  * executor_shape is an Executor type trait which provides the shape type
  * defined by the Executor.
@@ -32,12 +33,12 @@ struct executor_shape {
 };
 
 template <typename Executor>
-struct executor_shape<Executor,
-                      pcl::void_t<typename Executor::shape_type>> {
+struct executor_shape<Executor, pcl::void_t<typename Executor::shape_type>> {
   using type = typename Executor::shape_type;
 };
 
 template <class Executor>
 using executor_shape_t = typename executor_shape<Executor>::type;
 
-}  // namespace executor
+} // namespace executor
+} // namespace pcl

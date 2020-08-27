@@ -11,8 +11,10 @@
 
 #include <pcl/common/utils.h>
 #include <pcl/experimental/executor/trait/common_traits.hpp>
+
 #include <type_traits>
 
+namespace pcl {
 namespace executor {
 
 /**
@@ -33,11 +35,14 @@ namespace executor {
  * Part of Proposal P1393R0
  *
  */
-template <
-    typename Executor, typename Property,
-    typename std::enable_if_t<
-        Property::template is_applicable_property<Executor>::value, int> = 0>
-constexpr auto query(Executor&&, const Property&) noexcept {
+template <typename Executor,
+          typename Property,
+          typename std::enable_if_t<
+              Property::template is_applicable_property<Executor>::value,
+              int> = 0>
+constexpr auto
+query(Executor&&, const Property&) noexcept
+{
   return Property::template static_query<Executor>::value;
 }
 
@@ -52,11 +57,13 @@ struct can_query : std::false_type {};
 
 template <typename Executor, typename Property>
 struct can_query<
-    Executor, Property,
+    Executor,
+    Property,
     pcl::void_t<decltype(query(std::declval<Executor>(), std::declval<Property>()))>>
-    : std::true_type {};
+: std::true_type {};
 
 template <typename Executor, typename Property>
 constexpr bool can_query_v = can_query<Executor, Property>::value;
 
-}  // namespace executor
+} // namespace executor
+} // namespace pcl

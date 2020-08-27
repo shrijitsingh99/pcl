@@ -10,8 +10,10 @@
 #pragma once
 
 #include <pcl/experimental/executor/trait/common_traits.hpp>
+
 #include <type_traits>
 
+namespace pcl {
 namespace executor {
 
 namespace detail {
@@ -23,11 +25,10 @@ namespace detail {
  * provided by all properties
  */
 template <typename Executor, typename Property>
-using contains_property =
-    std::is_same<std::remove_const_t<decltype(
-                     Property::template static_query<Executor>::value)>,
-                 Property>;
-}  // namespace detail
+using contains_property = std::is_same<
+    std::remove_const_t<decltype(Property::template static_query<Executor>::value)>,
+    Property>;
+} // namespace detail
 
 /**
  * \brief Enforces a specified Property on an Executor. A new executor instance
@@ -52,14 +53,16 @@ using contains_property =
  * 2. Support multiple querying multiple properties in the trait: template
  * <typename Executor, typename... Properties>
  */
-template <typename Executor, typename Property,
+template <typename Executor,
+          typename Property,
           typename std::enable_if_t<
               Property::template is_applicable_property<Executor>::value &&
                   Property::is_requirable &&
                   detail::contains_property<Executor, Property>::value,
               int> = 0>
-constexpr decltype(auto) require(const Executor& ex,
-                                 const Property& p) noexcept {
+constexpr decltype(auto)
+require(const Executor& ex, const Property& p) noexcept
+{
   return ex.require(p);
 }
 
@@ -73,12 +76,14 @@ template <typename Executor, typename Properties, typename = void>
 struct can_require : std::false_type {};
 
 template <typename Executor, typename Property>
-struct can_require<Executor, Property,
-                   pcl::void_t<decltype(require(std::declval<Executor>(),
-                                           std::declval<Property>()))>>
-    : std::true_type {};
+struct can_require<
+    Executor,
+    Property,
+    pcl::void_t<decltype(require(std::declval<Executor>(), std::declval<Property>()))>>
+: std::true_type {};
 
 template <typename Executor, typename Property>
 constexpr bool can_require_v = can_require<Executor, Property>::value;
 
-}  // namespace executor
+} // namespace executor
+} // namespace pcl

@@ -9,9 +9,11 @@
 
 #pragma once
 
-#include <type_traits>
 #include <pcl/type_traits.h>
 
+#include <type_traits>
+
+namespace pcl {
 namespace executor {
 
 /**
@@ -23,12 +25,13 @@ struct equality_comparable : std::false_type {};
 
 template <typename T1, typename T2>
 struct equality_comparable<
-    T1, T2,
+    T1,
+    T2,
     pcl::void_t<decltype(std::declval<T1>() == std::declval<T2>(),
-                              std::declval<T2>() == std::declval<T1>(),
-                              std::declval<T1>() != std::declval<T2>(),
-                              std::declval<T2>() != std::declval<T1>())>>
-    : std::true_type {};
+                         std::declval<T2>() == std::declval<T1>(),
+                         std::declval<T1>() != std::declval<T2>(),
+                         std::declval<T2>() != std::declval<T1>())>> : std::true_type {
+};
 
 template <typename T1, typename T2>
 constexpr bool equality_comparable_v = equality_comparable<T1, T2>::value;
@@ -72,18 +75,14 @@ namespace detail {
 template <typename T1, typename T2>
 struct is_same_template_impl : std::false_type {};
 
-template <template <typename...> class Type, typename... Args1,
-          typename... Args2>
-struct is_same_template_impl<Type<Args1...>, Type<Args2...>> : std::true_type {
-};
+template <template <typename...> class Type, typename... Args1, typename... Args2>
+struct is_same_template_impl<Type<Args1...>, Type<Args2...>> : std::true_type {};
 
-}  // namespace detail
+} // namespace detail
 
 template <typename T1, typename T2>
 using is_same_template =
-    detail::is_same_template_impl<pcl::remove_cvref_t<T1>,
-                                  pcl::remove_cvref_t<T2>>;
+    detail::is_same_template_impl<pcl::remove_cvref_t<T1>, pcl::remove_cvref_t<T2>>;
 
-
-
-}  // namespace executor
+} // namespace executor
+} // namespace pcl

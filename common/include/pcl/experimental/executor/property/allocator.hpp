@@ -11,6 +11,7 @@
 
 #include <pcl/experimental/executor/property/base_property.hpp>
 
+namespace pcl {
 namespace executor {
 
 /**
@@ -24,27 +25,31 @@ namespace executor {
  * \todo Look into use cases of allocators in executors and implement their
  * mechanism for using them if needed
  */
- template <typename ProtoAllocator>
-struct allocator_t
-    : base_executor_property<allocator_t<ProtoAllocator>, true, true> {
+template <typename ProtoAllocator>
+struct allocator_t : base_executor_property<allocator_t<ProtoAllocator>, true, true> {
   constexpr explicit allocator_t(const ProtoAllocator& alloc) : alloc_(alloc) {}
 
-  constexpr ProtoAllocator value() const { return alloc_; }
+  constexpr ProtoAllocator
+  value() const
+  {
+    return alloc_;
+  }
 
- private:
+private:
   ProtoAllocator alloc_;
 };
 
 template <>
-struct allocator_t<void>
-    : base_executor_property<allocator_t<void>, true, true> {
+struct allocator_t<void> : base_executor_property<allocator_t<void>, true, true> {
   template <class ProtoAllocator>
-  constexpr allocator_t<ProtoAllocator> operator()(
-      const ProtoAllocator& alloc) const {
+  constexpr allocator_t<ProtoAllocator>
+  operator()(const ProtoAllocator& alloc) const
+  {
     return allocator_t<ProtoAllocator>{alloc};
   }
 };
 
 static constexpr allocator_t<void> allocator{};
 
-}  // namespace executor
+} // namespace executor
+} // namespace pcl

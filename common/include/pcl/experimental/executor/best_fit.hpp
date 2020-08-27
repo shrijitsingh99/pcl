@@ -21,22 +21,27 @@
 #include <iostream>
 #include <thread>
 
+namespace pcl {
 namespace executor {
 
-static const auto best_fit_executors =
-    std::make_tuple(executor::omp_executor<>{}, executor::sse_executor<>{},
-                    executor::inline_executor<>{});
+static const auto best_fit_executors = std::make_tuple(executor::omp_executor<>{},
+                                                       executor::sse_executor<>{},
+                                                       executor::inline_executor<>{});
 
 struct executor_runtime_checks {
-  template <typename Executor, typename executor::InstanceOf<
-                                   Executor, executor::inline_executor> = 0>
-  static bool check(Executor&) {
+  template <typename Executor,
+            typename executor::InstanceOf<Executor, executor::inline_executor> = 0>
+  static bool
+  check(Executor&)
+  {
     return true;
   }
 
   template <typename Executor,
             typename executor::InstanceOf<Executor, executor::sse_executor> = 0>
-  static bool check(Executor&) {
+  static bool
+  check(Executor&)
+  {
     if (const char* env_p = std::getenv("PCL_ENABLE_SSE_EXEC"))
       if (boost::iequals(env_p, "OFF"))
         return false;
@@ -45,7 +50,9 @@ struct executor_runtime_checks {
 
   template <typename Executor,
             typename executor::InstanceOf<Executor, executor::omp_executor> = 0>
-  static bool check(Executor& exec) {
+  static bool
+  check(Executor& exec)
+  {
     if (const char* env_p = std::getenv("PCL_ENABLE_OMP_EXEC"))
       if (boost::iequals(env_p, "OFF"))
         return false;
@@ -53,16 +60,17 @@ struct executor_runtime_checks {
     // If hardware_concurrency() fails to get the number of threads than set max
     // threads to 2 as a fallback to prevent unwanted scaling in machines with
     // large number of available threads
-    auto max_threads =
-        std::max(std::min(std::thread::hardware_concurrency(), 8u), 2u);
+    auto max_threads = std::max(std::min(std::thread::hardware_concurrency(), 8u), 2u);
     exec.set_max_threads(max_threads);
 
     return true;
   }
 
-  template <typename Executor, typename executor::InstanceOf<
-                                   Executor, executor::cuda_executor> = 0>
-  static bool check(Executor&) {
+  template <typename Executor,
+            typename executor::InstanceOf<Executor, executor::cuda_executor> = 0>
+  static bool
+  check(Executor&)
+  {
     if (const char* env_p = std::getenv("PCL_ENABLE_CUDA_EXEC"))
       if (boost::iequals(env_p, "OFF"))
         return false;
@@ -73,15 +81,21 @@ struct executor_runtime_checks {
 namespace detail {
 
 template <typename Function, typename Executor, typename = void>
-bool execute(Function&&, Executor&) {
+bool
+execute(Function&&, Executor&)
+{
   return false;
 }
 
-template <typename Function, template <typename...> class Executor,
-          typename... Properties,
-          typename std::enable_if<executor::is_executor_available_v<Executor>,
-                                  int>::type = 0>
-bool execute(Function&& f, Executor<Properties...>& exec) {
+template <
+    typename Function,
+    template <typename...>
+    class Executor,
+    typename... Properties,
+    typename std::enable_if<executor::is_executor_available_v<Executor>, int>::type = 0>
+bool
+execute(Function&& f, Executor<Properties...>& exec)
+{
   f(exec);
   return true;
 }
@@ -95,15 +109,18 @@ struct executor_predicate {
   struct condition<T,
                    std::enable_if_t<is_executor_instance_available<T>::value &&
                                     pcl::tuple_contains_type<T, Supported>::value>>
-      : std::true_type {};
+  : std::true_type {};
 };
 
-}  // namespace detail
+} // namespace detail
 
-template <typename RuntimeChecks = executor_runtime_checks, typename Function,
+template <typename RuntimeChecks = executor_runtime_checks,
+          typename Function,
           typename... SupportedExecutors>
-void enable_exec_with_priority(
-    Function&& f, std::tuple<SupportedExecutors...> supported_execs) {
+void
+enable_exec_with_priority(Function&& f,
+                          std::tuple<SupportedExecutors...> supported_execs)
+{
   static_assert(std::is_base_of<executor_runtime_checks, RuntimeChecks>::value,
                 "Runtime checks should inherit from executor_runtime_checks");
   bool executor_selected = false;
@@ -124,22 +141,27 @@ void enable_exec_with_priority(
               << std::endl;
 }
 
-template <typename RuntimeChecks = executor_runtime_checks, typename Function,
+template <typename RuntimeChecks = executor_runtime_checks,
+          typename Function,
           typename... SupportedExecutors>
-void enable_exec_with_priority(Function&& f, SupportedExecutors&&... execs) {
+void
+enable_exec_with_priority(Function&& f, SupportedExecutors&&... execs)
+{
   enable_exec_with_priority<RuntimeChecks>(f, std::make_tuple(execs...));
 }
 
-template <typename RuntimeChecks = executor_runtime_checks, typename Function,
+template <typename RuntimeChecks = executor_runtime_checks,
+          typename Function,
           typename... SupportedExecutors>
-void enable_exec_on_desc_priority(
-    Function&& f, std::tuple<SupportedExecutors...> supported_execs) {
+void
+enable_exec_on_desc_priority(Function&& f,
+                             std::tuple<SupportedExecutors...> supported_execs)
+{
   static_assert(std::is_base_of<executor_runtime_checks, RuntimeChecks>::value,
                 "Runtime checks should inherit from executor_runtime_checks");
 
   using predicate = detail::executor_predicate<decltype(supported_execs)>;
-  pcl::filter_tuple_values<predicate::template condition,
-                      decltype(best_fit_executors)>
+  pcl::filter_tuple_values<predicate::template condition, decltype(best_fit_executors)>
       filter_available;
 
   auto filtered = filter_available(best_fit_executors);
@@ -147,12 +169,14 @@ void enable_exec_on_desc_priority(
   enable_exec_with_priority(f, filtered);
 }
 
-template <typename RuntimeChecks = executor_runtime_checks, typename Function,
+template <typename RuntimeChecks = executor_runtime_checks,
+          typename Function,
           typename... SupportedExecutors>
-void enable_exec_on_desc_priority(Function&& f,
-                                  SupportedExecutors&&... supported_execs) {
-  enable_exec_on_desc_priority<RuntimeChecks>(
-      f, std::make_tuple(supported_execs...));
+void
+enable_exec_on_desc_priority(Function&& f, SupportedExecutors&&... supported_execs)
+{
+  enable_exec_on_desc_priority<RuntimeChecks>(f, std::make_tuple(supported_execs...));
 }
 
-}  // namespace executor
+} // namespace executor
+} // namespace pcl

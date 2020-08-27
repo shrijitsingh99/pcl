@@ -10,8 +10,10 @@
 #pragma once
 
 #include <pcl/experimental/executor/trait/is_executor.hpp>
+
 #include <functional>
 
+namespace pcl {
 namespace executor {
 
 /**
@@ -32,69 +34,73 @@ namespace executor {
  */
 template <typename DerivedProperty, bool requireable, bool preferable>
 struct base_executor_property {
-/**
- * \brief Specifies whether property supports require customization point
- *
- * Part of Proposal P1393R0
- */
+  /**
+   * \brief Specifies whether property supports require customization point
+   *
+   * Part of Proposal P1393R0
+   */
   static constexpr bool is_requirable = requireable;
 
-/**
- * \brief Specifies whether property supports prefer customization point
- *
- * Part of Proposal P1393R0
- */
+  /**
+   * \brief Specifies whether property supports prefer customization point
+   *
+   * Part of Proposal P1393R0
+   */
   static constexpr bool is_preferable = preferable;
 
-/**
- * \brief Checks whether the given Property is applicable for the given type T.
- *
- * \details Currently for the property to be applicable T should be an executor type.
- * In proposal P1393R0 there are no conditions specified for a property to be applicable
- * and the design is left up to the implementer
- *
- * Part of Proposal P1393R0
- *
- * \todo: Convert is_applicable_property to a static constexpr in GCC 6 onwards
- * Workaround: stackoverflow.com/questions/45607450/gcc5-nested-variable-template-is-not-a-function-template
- */
+  /**
+   * \brief Checks whether the given Property is applicable for the given type T.
+   *
+   * \details Currently for the property to be applicable T should be an executor type.
+   * In proposal P1393R0 there are no conditions specified for a property to be
+   * applicable and the design is left up to the implementer
+   *
+   * Part of Proposal P1393R0
+   *
+   * \todo: Convert is_applicable_property to a static constexpr in GCC 6 onwards
+   * Workaround:
+   * stackoverflow.com/questions/45607450/gcc5-nested-variable-template-is-not-a-function-template
+   */
   template <typename T>
   struct is_applicable_property {
     static constexpr bool value = is_executor_v<T>;
   };
 
-/**
- * \brief A static query for a property supported by an Executor
- *
- * \details Allows checking whether a property is supported by an Executor
- * without an instance of an executor using the overloaded query memeber function
- * in Executor
- *
- * Part of Proposal P0443R13 (2.2.11 & 2.2.12) and P1393R0
- *
- * \todo: Convert static_query to a static constexpr in GCC 6 onwards
- * Workaround: stackoverflow.com/questions/45607450/gcc5-nested-variable-template-is-not-a-function-template
- */
-template <typename Executor>
+  /**
+   * \brief A static query for a property supported by an Executor
+   *
+   * \details Allows checking whether a property is supported by an Executor
+   * without an instance of an executor using the overloaded query memeber function
+   * in Executor
+   *
+   * Part of Proposal P0443R13 (2.2.11 & 2.2.12) and P1393R0
+   *
+   * \todo: Convert static_query to a static constexpr in GCC 6 onwards
+   * Workaround:
+   * stackoverflow.com/questions/45607450/gcc5-nested-variable-template-is-not-a-function-template
+   */
+  template <typename Executor>
   struct static_query {
     static constexpr auto value =
         std::remove_reference_t<Executor>::query(DerivedProperty{});
   };
 
-/**
- * \warning: Not compatible with GCC 5 and lower versions
- * Workaround: stackoverflow.com/questions/45607450/gcc5-nested-variable-template-is-not-a-function-template
- */
+  /**
+   * \warning: Not compatible with GCC 5 and lower versions
+   * Workaround:
+   * stackoverflow.com/questions/45607450/gcc5-nested-variable-template-is-not-a-function-template
+   */
   template <typename T>
-  static constexpr bool is_applicable_property_v =
-      is_applicable_property<T>::value;
+  static constexpr bool is_applicable_property_v = is_applicable_property<T>::value;
 
-/**
- * \warning: Not compatible with GCC 5 and lower versions
- * Workaround: stackoverflow.com/questions/45607450/gcc5-nested-variable-template-is-not-a-function-template
- */
+  /**
+   * \warning: Not compatible with GCC 5 and lower versions
+   * Workaround:
+   * stackoverflow.com/questions/45607450/gcc5-nested-variable-template-is-not-a-function-template
+   */
   template <class Executor>
   static constexpr auto static_query_v = static_query<Executor>::value;
 };
 
-}  // namespace executor
+} // namespace executor
+} // namespace pcl

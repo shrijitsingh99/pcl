@@ -10,6 +10,7 @@
 #include <pcl/experimental/executor/executor.h>
 #include <pcl/test/gtest.h>
 
+using namespace pcl;
 using namespace executor;
 
 using ExecutorAlwaysAvailableTypes = ::testing::Types<const default_inline_executor,

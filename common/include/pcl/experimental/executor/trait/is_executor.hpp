@@ -10,8 +10,10 @@
 #pragma once
 
 #include <pcl/experimental/executor/trait/common_traits.hpp>
+
 #include <type_traits>
 
+namespace pcl {
 namespace executor {
 
 namespace detail {
@@ -22,20 +24,20 @@ namespace detail {
 static const auto noop = [] {};
 
 /**
- * \brief Checks if the given type provides a member function named `execute` that takes a
- * nullary callable
- * \tparam T type to check for member function `execute`
+ * \brief Checks if the given type provides a member function named `execute` that takes
+ * a nullary callable \tparam T type to check for member function `execute`
  */
 template <typename T, typename = void>
 struct contains_execute : std::false_type {};
 
 template <typename T>
 struct contains_execute<
-    T, std::enable_if_t<std::is_same<
-           decltype(std::declval<T>().execute(detail::noop)), void>::value>>
-    : std::true_type {};
+    T,
+    std::enable_if_t<
+        std::is_same<decltype(std::declval<T>().execute(detail::noop)), void>::value>>
+: std::true_type {};
 
-}  // namespace detail
+} // namespace detail
 
 /**
  * \brief Checks whether the type is an executor
@@ -61,9 +63,10 @@ struct is_executor<T,
                    std::enable_if_t<std::is_copy_constructible<T>::value &&
                                     detail::contains_execute<T>::value &&
                                     executor::equality_comparable<T, T>::value>>
-    : std::true_type {};
+: std::true_type {};
 
 template <typename T>
 static constexpr bool is_executor_v = is_executor<T>::value;
 
-}  // namespace executor
+} // namespace executor
+} // namespace pcl

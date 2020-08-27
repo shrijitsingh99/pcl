@@ -15,6 +15,7 @@
 
 #include <type_traits>
 
+namespace pcl {
 namespace executor {
 
 /**
@@ -86,3 +87,4 @@ template <typename Executor, typename Property>
 constexpr bool can_prefer_v = can_prefer<Executor, Property>::value;
 
 } // namespace executor
+} // namespace pcl

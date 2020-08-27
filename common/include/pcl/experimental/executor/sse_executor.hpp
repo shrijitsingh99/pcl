@@ -12,6 +12,7 @@
 #include <pcl/experimental/executor/property.h>
 #include <pcl/experimental/executor/type_trait.h>
 
+namespace pcl {
 namespace executor {
 
 template <typename Blocking, typename ProtoAllocator>
@@ -28,42 +29,56 @@ struct sse_executor {
   using shape_type = std::size_t;
 
   template <typename Executor, InstanceOf<Executor, sse_executor> = 0>
-  friend bool operator==(const sse_executor&,
-                         const Executor&) noexcept {
+  friend bool
+  operator==(const sse_executor&, const Executor&) noexcept
+  {
     return std::is_same<sse_executor, Executor>::value;
   }
 
   template <typename Executor, InstanceOf<Executor, sse_executor> = 0>
-  friend bool operator!=(const sse_executor& lhs,
-                         const Executor& rhs) noexcept {
+  friend bool
+  operator!=(const sse_executor& lhs, const Executor& rhs) noexcept
+  {
     return !operator==(lhs, rhs);
   }
 
   template <typename F>
-  void execute(F&& f) const {
-    static_assert(is_executor_available_v<sse_executor>,
-                  "SSE executor unavailable");
+  void
+  execute(F&& f) const
+  {
+    static_assert(is_executor_available_v<sse_executor>, "SSE executor unavailable");
     f();
   }
 
   template <typename F>
-  void bulk_execute(F&& f, const shape_type&) const {
-    static_assert(is_executor_available_v<sse_executor>,
-                  "SSE executor unavailable");
+  void
+  bulk_execute(F&& f, const shape_type&) const
+  {
+    static_assert(is_executor_available_v<sse_executor>, "SSE executor unavailable");
     // TODO: Look into  #pragma simd and what bulk execute will do for SSE
     f(0);
   }
 
-  static constexpr auto query(const blocking_t&) noexcept { return Blocking{}; }
+  static constexpr auto
+  query(const blocking_t&) noexcept
+  {
+    return Blocking{};
+  }
 
-  sse_executor<blocking_t::always_t, ProtoAllocator> require(
-      const blocking_t::always_t&) const {
+  sse_executor<blocking_t::always_t, ProtoAllocator>
+  require(const blocking_t::always_t&) const
+  {
     return {};
   }
 
-  static constexpr auto name() { return "sse_executor"; }
+  static constexpr auto
+  name()
+  {
+    return "sse_executor";
+  }
 };
 
 using default_sse_executor = sse_executor<>;
 
-}  // namespace executor
+} // namespace executor
+} // namespace pcl

@@ -9,6 +9,7 @@
 
 #pragma once
 
+namespace pcl {
 namespace executor {
 
 /**
@@ -20,8 +21,8 @@ namespace executor {
  * and inherit from std::true_type
  * E.g. template <> struct is_executor_available<inline_executor> : std::true_type {};
  *
- * This is not part of the proposal and is needed for PCL, since the availability of an executor
- * may depend on hardware availability or other factors
+ * This is not part of the proposal and is needed for PCL, since the availability of an
+ * executor may depend on hardware availability or other factors
  *
  * \tparam Executor an executor type
  */
@@ -35,6 +36,8 @@ template <typename T>
 struct is_executor_instance_available : std::false_type {};
 
 template <template <typename...> class Executor, typename... Properties>
-struct is_executor_instance_available<Executor<Properties...>> : is_executor_available<Executor> {};
+struct is_executor_instance_available<Executor<Properties...>>
+: is_executor_available<Executor> {};
 
-}  // namespace executor
+} // namespace executor
+} // namespace pcl

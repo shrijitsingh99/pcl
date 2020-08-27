@@ -12,6 +12,7 @@
 #include <pcl/experimental/executor/property.h>
 #include <pcl/experimental/executor/type_trait.h>
 
+namespace pcl {
 namespace executor {
 
 template <typename Blocking, typename ProtoAllocator>
@@ -26,37 +27,53 @@ struct inline_executor {
   using shape_type = std::size_t;
 
   template <typename Executor, InstanceOf<Executor, inline_executor> = 0>
-  friend bool operator==(const inline_executor&,
-                         const Executor&) noexcept {
+  friend bool
+  operator==(const inline_executor&, const Executor&) noexcept
+  {
     return std::is_same<inline_executor, Executor>::value;
   }
 
   template <typename Executor, InstanceOf<Executor, inline_executor> = 0>
-  friend bool operator!=(const inline_executor& lhs,
-                         const Executor& rhs) noexcept {
+  friend bool
+  operator!=(const inline_executor& lhs, const Executor& rhs) noexcept
+  {
     return !operator==(lhs, rhs);
   }
 
   template <typename F>
-  void execute(F&& f) const {
+  void
+  execute(F&& f) const
+  {
     f();
   }
 
   template <typename F, typename... Args>
-  void bulk_execute(F&& f, const std::size_t&) const {
+  void
+  bulk_execute(F&& f, const std::size_t&) const
+  {
     f(0);
   }
 
-  static constexpr auto query(const blocking_t&) noexcept { return Blocking(); }
+  static constexpr auto
+  query(const blocking_t&) noexcept
+  {
+    return Blocking();
+  }
 
-  inline_executor<blocking_t::always_t, ProtoAllocator> require(
-      const blocking_t::always_t&) const {
+  inline_executor<blocking_t::always_t, ProtoAllocator>
+  require(const blocking_t::always_t&) const
+  {
     return {};
   }
 
-  static constexpr auto name() { return "inline_executor"; }
+  static constexpr auto
+  name()
+  {
+    return "inline_executor";
+  }
 };
 
 using default_inline_executor = inline_executor<>;
 
-}  // namespace executor
+} // namespace executor
+} // namespace pcl

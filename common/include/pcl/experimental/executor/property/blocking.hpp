@@ -11,11 +11,12 @@
 
 #include <pcl/experimental/executor/property/base_property.hpp>
 
+namespace pcl {
 namespace executor {
 
 /**
- * \brief A behavioral property (P0443R13 2.2.12) that guarantees executors provide about the
- * blocking behavior of their execution functions.
+ * \brief A behavioral property (P0443R13 2.2.12) that guarantees executors provide
+ * about the blocking behavior of their execution functions.
  *
  * \details Provides 3 nested property which represent different blocking behaviours:
  * 1. Possible - May or may not block depending on context no guarantees are made
@@ -27,22 +28,30 @@ namespace executor {
  * \todo Look into and implement blocking_adaptation_t if needed
  */
 struct blocking_t : base_executor_property<blocking_t, false, false> {
-/**
- * \brief The equality operator is overloaded to be able to compare if the
- * property instance queried from and executor matches the property we expect
- */
-  friend constexpr bool operator==(const blocking_t& a, const blocking_t& b) {
+  /**
+   * \brief The equality operator is overloaded to be able to compare if the
+   * property instance queried from and executor matches the property we expect
+   */
+  friend constexpr bool
+  operator==(const blocking_t& a, const blocking_t& b)
+  {
     return a.value_ == b.value_;
   }
 
-  friend constexpr bool operator!=(const blocking_t& a, const blocking_t& b) {
+  friend constexpr bool
+  operator!=(const blocking_t& a, const blocking_t& b)
+  {
     return !(a == b);
   }
 
   constexpr blocking_t() = default;
 
   struct always_t : base_executor_property<always_t, true, true> {
-    static constexpr blocking_t value() { return {}; }
+    static constexpr blocking_t
+    value()
+    {
+      return {};
+    }
   };
 
   static constexpr always_t always{};
@@ -50,7 +59,11 @@ struct blocking_t : base_executor_property<blocking_t, false, false> {
   constexpr blocking_t(const always_t&) : value_{ALWAYS} {};
 
   struct never_t : base_executor_property<never_t, true, true> {
-    static constexpr blocking_t value() { return {}; }
+    static constexpr blocking_t
+    value()
+    {
+      return {};
+    }
   };
 
   static constexpr never_t never{};
@@ -58,31 +71,35 @@ struct blocking_t : base_executor_property<blocking_t, false, false> {
   constexpr blocking_t(const never_t&) : value_{NEVER} {};
 
   struct possibly_t : base_executor_property<possibly_t, true, true> {
-    static constexpr blocking_t value() { return {}; }
+    static constexpr blocking_t
+    value()
+    {
+      return {};
+    }
   };
 
   static constexpr possibly_t possibly{};
 
   constexpr blocking_t(const possibly_t&) : value_{POSISBLY} {};
 
-/**
- * \brief Default property value i.e. always
- */
+  /**
+   * \brief Default property value i.e. always
+   */
   template <typename Executor>
   struct static_query {
     static constexpr auto value = always;
   };
 
   template <typename Executor>
-  static constexpr decltype(auto) static_query_v =
-      static_query<Executor>::value;
+  static constexpr decltype(auto) static_query_v = static_query<Executor>::value;
 
-/**
- * \brief Used for having an order between the nested properties
- */
-  const enum {DEFAULT, ALWAYS, NEVER, POSISBLY} value_ = DEFAULT;
+  /**
+   * \brief Used for having an order between the nested properties
+   */
+  const enum { DEFAULT, ALWAYS, NEVER, POSISBLY } value_ = DEFAULT;
 };
 
 static constexpr blocking_t blocking{};
 
-}  // namespace executor
+} // namespace executor
+} // namespace pcl
