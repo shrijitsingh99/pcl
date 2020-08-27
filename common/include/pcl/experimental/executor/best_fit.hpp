@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <pcl/common/tuple_utils.h>
+#include <pcl/common/tuple.h>
 #include <pcl/experimental/executor/cuda_executor.hpp>
 #include <pcl/experimental/executor/inline_executor.hpp>
 #include <pcl/experimental/executor/omp_executor.hpp>

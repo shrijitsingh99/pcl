@@ -303,6 +303,7 @@ namespace pcl
   /**
    * \todo: Remove in C++17
    */
+#ifndef __cpp_lib_logical_traits
   // Implementation taken from
   // https://stackoverflow.com/questions/31533469/check-a-parameter-pack-for-all-of-type-t
   template <typename... Conds>
@@ -311,4 +312,25 @@ namespace pcl
   template <typename Cond, typename... Conds>
   struct disjunction<Cond, Conds...>
   : std::conditional<Cond::value, std::true_type, disjunction<Conds...>>::type {};
-}
+#else
+  using std::disjunction;
+#endif
+
+  namespace detail {
+  template <typename T1, typename T2>
+  struct is_same_template_impl : std::false_type {};
+
+  template <template <typename...> class Type, typename... Args1, typename... Args2>
+  struct is_same_template_impl<Type<Args1...>, Type<Args2...>> : std::true_type {};
+  } // namespace detail
+
+  /** \brief Checks if the un-parametrized versions of two class templates are the same
+   */
+  template <typename T1, typename T2>
+  using is_same_template =
+      detail::is_same_template_impl<pcl::remove_cvref_t<T1>, pcl::remove_cvref_t<T2>>;
+
+  template <typename T1, typename T2>
+  using is_same_template_v = typename is_same_template<T1, T2>::value;
+
+} // namespace pcl

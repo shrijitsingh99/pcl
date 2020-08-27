@@ -102,5 +102,18 @@ struct base_executor_property {
   static constexpr auto static_query_v = static_query<Executor>::value;
 };
 
+namespace detail {
+/**
+ * \brief Checks if the given Executor supports the Property
+ *
+ *\details This is checked through a template variable static_query_v which is
+ * provided by all properties
+ */
+template <typename Executor, typename Property>
+using contains_property = std::is_same<
+    std::remove_const_t<decltype(Property::template static_query<Executor>::value)>,
+    Property>;
+} // namespace detail
+
 } // namespace executor
 } // namespace pcl

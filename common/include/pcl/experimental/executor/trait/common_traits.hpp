@@ -69,20 +69,5 @@ constexpr bool is_instance_of_any_v = is_instance_of_any<Executor, Type...>::val
 template <typename Executor, template <typename...> class... Type>
 using InstanceOfAny = std::enable_if_t<is_instance_of_any_v<Executor, Type...>, int>;
 
-// is_same_template
-namespace detail {
-
-template <typename T1, typename T2>
-struct is_same_template_impl : std::false_type {};
-
-template <template <typename...> class Type, typename... Args1, typename... Args2>
-struct is_same_template_impl<Type<Args1...>, Type<Args2...>> : std::true_type {};
-
-} // namespace detail
-
-template <typename T1, typename T2>
-using is_same_template =
-    detail::is_same_template_impl<pcl::remove_cvref_t<T1>, pcl::remove_cvref_t<T2>>;
-
 } // namespace executor
 } // namespace pcl
