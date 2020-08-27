@@ -80,7 +80,7 @@ struct blocking_t : base_executor_property<blocking_t, false, false> {
 
   static constexpr possibly_t possibly{};
 
-  constexpr blocking_t(const possibly_t&) : value_{POSISBLY} {};
+  constexpr blocking_t(const possibly_t&) : value_{POSSIBLY} {};
 
   /**
    * \brief Default property value i.e. always
@@ -96,7 +96,7 @@ struct blocking_t : base_executor_property<blocking_t, false, false> {
   /**
    * \brief Used for having an order between the nested properties
    */
-  const enum { DEFAULT, ALWAYS, NEVER, POSISBLY } value_ = DEFAULT;
+  const enum { DEFAULT, ALWAYS, NEVER, POSSIBLY } value_ = DEFAULT;
 };
 
 static constexpr blocking_t blocking{};
