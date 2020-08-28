@@ -2,13 +2,15 @@
  * SPDX-License-Identifier: BSD-3-Clause
  *
  *  Point Cloud Library (PCL) - www.pointclouds.org
- *  Copyright (c) 2014-, Open Perception, Inc.
+ *  Copyright (c) 2020-, Open Perception, Inc.
  *  Author(s): Shrijit Singh <shrijitsingh99@gmail.com>
  *
  */
 
 #include <pcl/experimental/executor/executor.h>
 #include <pcl/test/gtest.h>
+
+#include <Eigen/Dense>
 
 using namespace pcl;
 using namespace executor;
@@ -26,8 +28,8 @@ using ExecutorCondAvailableTypes = ::testing::Types<const default_inline_executo
                                                     default_omp_executor>;
 
 using ExecutorTypes = std::conditional_t<is_executor_available_v<omp_executor>,
-                                       ExecutorCondAvailableTypes,
-                                       ExecutorAlwaysAvailableTypes>;
+                                         ExecutorCondAvailableTypes,
+                                         ExecutorAlwaysAvailableTypes>;
 
 template <typename Executor>
 class ExecutorValidity : public ::testing::Test {};
@@ -112,8 +114,132 @@ TYPED_TEST(ExecutorInstanceOfAny, executors)
 {
   using DerivedExecutor = typename TestFixture::template derived_inline<>;
 
-  EXPECT_TRUE((is_instance_of_any_v<default_inline_executor, inline_executor>));
-  EXPECT_TRUE((is_instance_of_any_v<DerivedExecutor, inline_executor>));
+  EXPECT_TRUE((is_instance_of_v<default_inline_executor, inline_executor>));
+  EXPECT_FALSE((is_instance_of_v<default_inline_executor, omp_executor>));
+
+  EXPECT_TRUE(
+      (is_instance_of_any_v<default_inline_executor, inline_executor, omp_executor>));
+  EXPECT_FALSE(
+      (is_instance_of_any_v<default_inline_executor, sse_executor, omp_executor>));
+
+  EXPECT_TRUE((is_instance_of_any_v<DerivedExecutor, inline_executor, omp_executor>));
+  EXPECT_FALSE((is_instance_of_any_v<DerivedExecutor, sse_executor, omp_executor>));
+}
+
+TEST(ExecutorRuntimeChecks, ExecutorEnviornmentVariableCheck)
+{
+  auto env_check = [&](auto exec, const char* env_name) {
+    setenv(env_name, "OFF", true);
+    EXPECT_FALSE(executor_runtime_checks::check(exec));
+    setenv(env_name, "ON", true);
+    EXPECT_TRUE(executor_runtime_checks::check(exec));
+  };
+
+  env_check(default_sse_executor{}, "PCL_ENABLE_SSE_EXEC");
+  env_check(default_omp_executor{}, "PCL_ENABLE_OMP_EXEC");
+}
+
+class MatrixMultiplication {
+protected:
+  template <
+      typename ExecutorT,
+      typename executor::InstanceOfAny<ExecutorT, inline_executor, sse_executor> = 0>
+  void
+  mmul(const ExecutorT ex,
+       const Eigen::MatrixXd& a,
+       const Eigen::MatrixXd& b,
+       Eigen::MatrixXd& c)
+  {
+    auto mul = [&]() { c = a * b; };
+    ex.execute(mul);
+  }
+
+  template <typename ExecutorT,
+            typename executor::InstanceOf<ExecutorT, omp_executor> = 0>
+  void
+  mmul(const ExecutorT ex,
+       const Eigen::MatrixXd& a,
+       const Eigen::MatrixXd& b,
+       Eigen::MatrixXd& c)
+  {
+    auto mul = [&](typename decltype(ex)::index_type index) {
+#pragma omp for schedule(static)
+      for (int i = 0; i < a.rows(); i = i + 1) {
+        for (int j = 0; j < b.cols(); j = j + 1) {
+          c(i, j) = 0.0;
+          for (int k = 0; k < a.cols(); k = k + 1) {
+            c(i, j) += a(i, k) * b(k, j);
+          }
+        }
+      }
+    };
+    ex.bulk_execute(mul, a.rows());
+  }
+
+  void
+  mmul(const Eigen::MatrixXd& a,
+       const Eigen::MatrixXd& b,
+       Eigen::MatrixXd& c,
+       bool custom_priority)
+  {
+    auto mul = [&](auto& exec) { mmul(exec, a, b, c); };
+
+    auto supported_executors =
+        std::conditional_t<is_executor_available_v<omp_executor>,
+                           std::tuple<default_omp_executor, default_inline_executor>,
+                           std::tuple<default_inline_executor>>();
+
+    if (custom_priority)
+      enable_exec_with_priority(mul, supported_executors);
+    else
+      enable_exec_on_desc_priority(mul, supported_executors);
+  }
+};
+
+template <typename Executor>
+class ExecutorMatrixMultiplication : public ::testing::Test,
+                                     public MatrixMultiplication {};
+
+TYPED_TEST_SUITE(ExecutorMatrixMultiplication, ExecutorTypes);
+
+TYPED_TEST(ExecutorMatrixMultiplication, executors)
+{
+  TypeParam exec;
+
+  double dataA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9}, dataB[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9},
+         dataC[9] = {0};
+  Eigen::MatrixXd a = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(dataA);
+  Eigen::MatrixXd b = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(dataB);
+  Eigen::MatrixXd c = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(dataC);
+
+  Eigen::MatrixXd ans(3, 3);
+  ans << 30, 36, 42, 66, 81, 96, 102, 126, 150;
+
+  c.setZero();
+  this->mmul(exec, a, b, c);
+  EXPECT_TRUE(c.isApprox(ans));
+}
+
+class ExecutorBestFitMatrixMultiplication : public ::testing::Test,
+                                            public MatrixMultiplication {};
+
+TEST_F(ExecutorBestFitMatrixMultiplication, executors)
+{
+  double dataA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9}, dataB[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+  Eigen::MatrixXd a = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(dataA);
+  Eigen::MatrixXd b = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(dataB);
+  Eigen::MatrixXd c = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>({0});
+
+  Eigen::MatrixXd ans(3, 3);
+  ans << 30, 36, 42, 66, 81, 96, 102, 126, 150;
+
+  c.setZero();
+  this->mmul(a, b, c, true);
+  EXPECT_TRUE(c.isApprox(ans));
+
+  c.setZero();
+  this->mmul(a, b, c, false);
+  EXPECT_TRUE(c.isApprox(ans));
 }
 
 int
