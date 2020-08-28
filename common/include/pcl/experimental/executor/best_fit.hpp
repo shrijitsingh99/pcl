@@ -24,6 +24,12 @@
 namespace pcl {
 namespace executor {
 
+/**
+ * \brief One of the following executors is used when a user doesn't specify an
+ * executor explicitly in an implementation supporting executors.
+ *
+ * It is used internally inside \ref enable_exec_on_desc_priority
+ */
 static const auto best_fit_executors = std::make_tuple(executor::omp_executor<>{},
                                                        executor::sse_executor<>{},
                                                        executor::inline_executor<>{});
@@ -121,7 +127,7 @@ struct executor_predicate {
   template <typename T>
   struct condition<T,
                    std::enable_if_t<is_executor_instance_available_v<T> &&
-                                    pcl::tuple_contains_type<T, Supported>::value>>
+                                    pcl::tuple_contains_type_v<T, Supported>>>
   : std::true_type {};
 };
 

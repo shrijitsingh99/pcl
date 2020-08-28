@@ -48,7 +48,7 @@ for_each_until_true(Tuple&& t, Function f, std::integral_constant<size_t, I>)
  *
  * \tparam Tuple The tuple to iterate through
  * \tparam Function A callable that is invoked for every tuple element and returns a
- * boolean indicating whether to coninute iteration or not
+ * boolean indicating whether to continue iteration or not
  *
  * \remark Implementation taken from
  * https://stackoverflow.com/questions/26902633/how-to-iterate-over-a-stdtuple-in-c-11
@@ -72,14 +72,18 @@ struct tuple_contains_type_impl<T, std::tuple<Us...>>
 } // namespace detail
 
 /**
- * \brief Checks whether a tuple contains a specified type
- *
- * \tparam T a type to check for
+ * \brief If the \Tuple contains the type \p T then provides the member constant value
+ * equal true. For any other type, value is false.
+ * *
+ * \tparam T a type to check
  * \tparam Tuple a tuple in which to check for the type
  *
  */
 template <typename T, typename Tuple>
-using tuple_contains_type = typename detail::tuple_contains_type_impl<T, Tuple>::type;
+using tuple_contains_type = detail::tuple_contains_type_impl<T, Tuple>;
+
+template <typename T, typename Tuple>
+constexpr bool tuple_contains_type_v = detail::tuple_contains_type_impl<T, Tuple>::value;
 
 namespace detail {
 
@@ -89,6 +93,14 @@ struct filter_tuple_values_impl {
       typename std::conditional<Predicate<TupleElements>::value, std::tuple<TupleElements>, std::tuple<>>::
           type()...));
 
+  /**
+   * \brief Checks whether a tuple contains a specified type
+   *
+   * \tparam TupleElements the elments of the tuple you want to filter
+   * \param std::tuple<TupleElements...> a tuple of the elements you want to filter
+   * \return a tuple containing the filtered elements
+   *
+   */
   auto
   operator()(const std::tuple<TupleElements...>& in)
   {
@@ -108,10 +120,10 @@ private:
 } // namespace detail
 
 /**
- * \brief Filters elements of a tuple based on the predicate/condition
+ * \brief Filters elements of \p Tuple based on the provided predicate/condition
  *
  * \tparam Predicate A trait which takes a tuple element as parameter and defines a
- * boolean member value which dictates whether to filter the tuple element or not
+ * boolean member \p value which dictates whether to filter the tuple element or not
  * \tparam Tuple a tuple to filter
  *
  */
