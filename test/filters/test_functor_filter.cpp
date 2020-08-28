@@ -106,7 +106,7 @@ struct FunctorFilterExecutor : public ::testing::Test {
         [](const auto first, const auto last, const index_t start) {
           index_t i = start;
           for (auto it = first; it != last; ++it, ++i)
-            ASSERT_EQ(*it, i);
+            EXPECT_EQ(*it, i);
         };
 
     for (const auto& keep_removed : {true, false}) {

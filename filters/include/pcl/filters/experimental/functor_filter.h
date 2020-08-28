@@ -99,7 +99,7 @@ public:
     auto cond_filtering = [&](executor::executor_index_t<Executor> index) {
       pcl::utils::ignore(index);
 #pragma omp for
-      for (uindex_t idx = 0; idx < indices_->size(); ++idx) {
+      for (std::ptrdiff_t idx = 0; idx < indices_->size(); ++idx) {
         if (negative_ != functor_(*input_, (*indices_)[idx])) {
           keep[idx] = true;
         }
