@@ -85,6 +85,9 @@ using tuple_contains_type = detail::tuple_contains_type_impl<T, Tuple>;
 template <typename T, typename Tuple>
 constexpr bool tuple_contains_type_v = detail::tuple_contains_type_impl<T, Tuple>::value;
 
+static_assert(tuple_contains_type_v<int, std::tuple<int, float, double, unsigned>>,
+              "Failed to check type in tuple");
+
 namespace detail {
 
 template <template <typename...> class Predicate, typename... TupleElements>
@@ -96,7 +99,7 @@ struct filter_tuple_values_impl {
   /**
    * \brief Checks whether a tuple contains a specified type
    *
-   * \tparam TupleElements the elments of the tuple you want to filter
+   * \tparam TupleElements the elements of the tuple you want to filter
    * \param std::tuple<TupleElements...> a tuple of the elements you want to filter
    * \return a tuple containing the filtered elements
    *
@@ -137,5 +140,12 @@ struct filter_tuple_values<Predicate, std::tuple<TupleElements...>>
 template <template <typename...> class Predicate, typename... TupleElements>
 struct filter_tuple_values<Predicate, const std::tuple<TupleElements...>>
 : detail::filter_tuple_values_impl<Predicate, TupleElements...> {};
+
+static_assert(
+    std::is_same<
+        std::tuple<float, double>,
+        filter_tuple_values<std::is_floating_point,
+                            std::tuple<int, float, double, unsigned>>::type>::value,
+    "Filtered types do not match");
 
 } // namespace pcl

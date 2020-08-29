@@ -15,19 +15,14 @@
 using namespace pcl;
 using namespace executor;
 
-const auto const_default_inline_executor = default_inline_executor{};
-const auto const_default_sse_executor = default_sse_executor{};
-const auto const_default_omp_executor = default_omp_executor{};
-
 using AvailableExecutorsTuple =
     typename pcl::filter_tuple_values<is_executor_instance_available,
-                                      decltype(std::make_tuple(
-                                          const_default_inline_executor,
-                                          default_inline_executor{},
-                                          const_default_sse_executor,
-                                          default_sse_executor{},
-                                          const_default_omp_executor,
-                                          default_omp_executor{}))>::type;
+                                      std::tuple<const default_inline_executor,
+                                                 default_inline_executor,
+                                                 const default_sse_executor,
+                                                 default_sse_executor,
+                                                 const default_omp_executor,
+                                                 default_omp_executor>>::type;
 
 template <typename T>
 struct TestExecutorTypes {};
