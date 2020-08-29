@@ -37,6 +37,13 @@ template <>
 struct is_executor_available<cuda_executor> : std::true_type {};
 #endif
 
+/** \brief Executes the CUDA kernels on the GPU
+ *
+ * \todo
+ * 1. Add support for non-blocking behaviour
+ * 2. Introducing CUDA specific property to enable streams and synchronization
+ * mechanisms
+ */
 template <typename Blocking = blocking_t::always_t,
           typename ProtoAllocator = std::allocator<void>>
 struct cuda_executor {
@@ -60,9 +67,14 @@ struct cuda_executor {
     return !operator==(lhs, rhs);
   }
 
-  template <typename F>
+  /**
+   * \brief  Launches the a single instance of the kernel
+   *
+   * \param f a CUDA kernel
+   */
+  template <typename Function>
   void
-  execute(F& f) const
+  execute(Function& f) const
   {
     static_assert(is_executor_available_v<cuda_executor>, "CUDA executor unavailable");
     pcl::utils::ignore(f);
@@ -78,11 +90,17 @@ struct cuda_executor {
 #endif
   }
 
-  // Passing rvalue reference of function doesn't currently work with CUDA for
-  // some reason
-  template <typename F>
+  /**
+   * \brief Launches the kernel with the specified \param shape
+   *
+   * \param f a CUDA kernel
+   * \param shape dimensions and size of grid and block
+   *
+   * \todo Investigate why passing rvalue reference of kernel doesn't work
+   */
+  template <typename Function>
   void
-  bulk_execute(F& f, const shape_type& shape) const
+  bulk_execute(Function& f, const shape_type& shape) const
   {
     static_assert(is_executor_available_v<cuda_executor>, "CUDA executor unavailable");
     pcl::utils::ignore(f, shape);

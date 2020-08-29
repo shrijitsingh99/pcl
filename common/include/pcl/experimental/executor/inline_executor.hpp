@@ -22,6 +22,12 @@ struct inline_executor;
 template <>
 struct is_executor_available<inline_executor> : std::true_type {};
 
+/**
+ * \brief Executes code sequentially on the currently running thread
+ * and doesn't offer any sort of parallelism.
+ *
+ * \todo Remove Blocking property since it cannot offer non-blocking behaviour
+ */
 template <typename Blocking = blocking_t::always_t,
           typename ProtoAllocator = std::allocator<void>>
 struct inline_executor {
@@ -42,18 +48,30 @@ struct inline_executor {
     return !operator==(lhs, rhs);
   }
 
-  template <typename F>
+  /**
+   * \brief Launches a single execution agent which invokes the callable
+   *
+   * \param f a callable
+   */
+  template <typename Function>
   void
-  execute(F&& f) const
+  execute(Function&& f) const
   {
     f();
   }
 
-  template <typename F, typename... Args>
+  /**
+   * \brief Eagerly launches execution agents in bulk and which invoke
+   * the callable with the associated agent's index.
+   *
+   * \param f a callable
+   * \param shape number of execution agents to be launched
+   */
+  template <typename Function>
   void
-  bulk_execute(F&& f, const std::size_t& n) const
+  bulk_execute(Function&& f, const std::size_t& shape) const
   {
-    for (index_type idx = 0; idx < n; ++idx)
+    for (index_type idx = 0; idx < shape; ++idx)
       f(idx);
   }
 

@@ -60,7 +60,7 @@ struct base_executor_property {
    *
    * Part of Proposal P1393R0
    *
-   * \todo: Convert is_applicable_property to a static constexpr in GCC 6 onwards
+   * \todo Convert is_applicable_property to a static constexpr in GCC 6 onwards
    * Workaround:
    * stackoverflow.com/questions/45607450/gcc5-nested-variable-template-is-not-a-function-template
    */
@@ -78,7 +78,7 @@ struct base_executor_property {
    *
    * Part of Proposal P0443R13 (2.2.11 & 2.2.12) and P1393R0
    *
-   * \todo: Convert static_query to a static constexpr in GCC 6 onwards
+   * \todo Convert static_query to a static constexpr in GCC 6 onwards
    * Workaround:
    * stackoverflow.com/questions/45607450/gcc5-nested-variable-template-is-not-a-function-template
    */

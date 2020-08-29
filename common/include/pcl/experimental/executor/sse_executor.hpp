@@ -24,6 +24,13 @@ template <>
 struct is_executor_available<sse_executor> : std::true_type {};
 #endif
 
+/**
+ * \brief Enforces vectorization of the code
+ *
+ * \todo
+ * 1. Remove Blocking property since it cannot offer non-blocking behaviour
+ * 2. Figure out how to vectorize the callable. E.g. using #pragma simd
+ */
 template <typename Blocking = blocking_t::always_t,
           typename ProtoAllocator = std::allocator<void>>
 struct sse_executor {
@@ -44,21 +51,32 @@ struct sse_executor {
     return !operator==(lhs, rhs);
   }
 
-  template <typename F>
+  /**
+   * \brief Launches a single execution agent which invokes the callable
+   *
+   * \param f a callable
+   */
+  template <typename Function>
   void
-  execute(F&& f) const
+  execute(Function&& f) const
   {
     static_assert(is_executor_available_v<sse_executor>, "SSE executor unavailable");
     f();
   }
 
-  template <typename F>
+  /**
+   * \brief Eagerly launches execution agents in bulk and which invoke
+   * the callable with the associated agent's index.
+   *
+   * \param f a callable
+   * \param shape number of execution agents to be launched
+   */
+  template <typename Function>
   void
-  bulk_execute(F&& f, const shape_type& n) const
+  bulk_execute(Function&& f, const shape_type& shape) const
   {
     static_assert(is_executor_available_v<sse_executor>, "SSE executor unavailable");
-    // TODO: Look into  #pragma simd and what bulk execute will do for SSE
-    for (index_type idx = 0; idx < n; ++idx)
+    for (index_type idx = 0; idx < shape; ++idx)
       f(idx);
   }
 

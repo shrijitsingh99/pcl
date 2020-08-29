@@ -245,7 +245,7 @@ namespace pcl
   }
 
   /**
-   * \todo: Remove in C++17
+   * \todo Remove in C++17
    */
 #ifndef __cpp_lib_void_t
   template <typename...>
@@ -272,7 +272,7 @@ namespace pcl
 #endif
 
   /**
-   * \todo: Remove in C++17
+   * \todo Remove in C++17
    */
 #ifndef __cpp_lib_is_invocable
   // Implementation taken from: https://stackoverflow.com/a/51188325
@@ -291,7 +291,7 @@ namespace pcl
 #endif
 
   /**
-   * \todo: Remove in C++20
+   * \todo Remove in C++20
    */
 #ifndef __cpp_lib_remove_cvref
   template <typename T>
@@ -301,7 +301,7 @@ namespace pcl
 #endif
 
   /**
-   * \todo: Remove in C++17
+   * \todo Remove in C++17
    */
 #ifndef __cpp_lib_logical_traits
   // Implementation taken from
