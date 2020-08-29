@@ -105,13 +105,11 @@ namespace pcl
       void
       filter (Indices &indices)
       {
-        if (!initCompute ())
-          return;
+        auto filterCloud = [this](Indices& indices) {
+          applyFilter (indices);
+        };
 
-        // Apply the actual filter
-        applyFilter (indices);
-
-        deinitCompute ();
+        filterImpl(filterCloud, indices);
       }
 
       /** \brief Calls the filtering method with specified executor and returns the filtered point cloud indices.

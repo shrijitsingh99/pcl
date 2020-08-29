@@ -184,8 +184,8 @@ namespace pcl
       applyFilter (PointCloud &output) = 0;
 
     /** \brief implementation of filter method
-      *  Added to ensure no code duplication is present between the with and without
-      * execuotor filter method
+      * Added to ensure no code duplication is present in the filter method
+      * overloads, with and without the executor
       *
       * \param[int] filterIndices the callable which calls the filter method
       * \param[out] output the resultant filtered point cloud
