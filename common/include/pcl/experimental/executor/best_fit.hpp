@@ -142,7 +142,7 @@ struct executor_predicate {
  * executor to execute the specified callable to get selected.
  *
  * The supported executors which are specified serve two purposes, one
- * being two provide a list of executor types which have valid overloads for
+ * being to provide a list of executor types which have valid overloads for
  * the specified callable, the second being that the order in which the
  * executors are specified indicates the priority (descending order of priority)
  * of each executor.
@@ -150,7 +150,7 @@ struct executor_predicate {
  * For each supported executor a set of runtime checks are performed one by one
  * (highest to lowest priority) until one of the checks passes, and that executor
  * is selected.
- * Custom runtime checks can be create be deriving from the class
+ * Custom runtime checks can be created by deriving from the class
  * \ref executor_runtime_checks and can be passed as a template parameter
  * to this function.
  *
@@ -198,7 +198,7 @@ enable_exec_with_priority(Function&& f,
  * executor to execute the specified callable to get selected.
  *
  * The supported executors which are specified serve two purposes, one
- * being two provide a list of executor types which have valid overloads for
+ * being to provide a list of executor types which have valid overloads for
  * the specified callable, the second being that the order in which the
  * executors are specified indicates the priority (descending order of priority)
  * of each executor.
@@ -206,7 +206,7 @@ enable_exec_with_priority(Function&& f,
  * For each supported executor a set of runtime checks are performed one by one
  * (highest to lowest priority) until one of the checks passes, and that executor
  * is selected.
- * Custom runtime checks can be create be deriving from the class
+ * Custom runtime checks can be created by deriving from the class
  * \ref executor_runtime_checks and can be passed as a template parameter
  * to this function.
  *
@@ -235,7 +235,7 @@ enable_exec_with_priority(Function&& f, SupportedExecutors&&... execs)
  * \details This function provides a mechanism for the best fitting
  * executor to execute the specified callable to get selected.
  *
- * The supported executors which are is used to provide a list of executor
+ * The supported executors which are used to provide a list of executor
  * types which have valid overloads for the specified callable.
  *
  * The priority if the supported executor is set according to the order
@@ -244,7 +244,7 @@ enable_exec_with_priority(Function&& f, SupportedExecutors&&... execs)
  * For each supported executor a set of runtime checks are performed one by one
  * (highest to lowest priority) until one of the checks passes, and that executor
  * is selected.
- * Custom runtime checks can be create be deriving from the class
+ * Custom runtime checks can be created by deriving from the class
  * \ref executor_runtime_checks and can be passed as a template parameter
  * to this function.
  *
@@ -282,7 +282,7 @@ enable_exec_on_desc_priority(Function&& f,
  * \details This function provides a mechanism for the best fitting
  * executor to execute the specified callable to get selected.
  *
- * The supported executors which are is used to provide a list of executor
+ * The supported executors which are used to provide a list of executor
  * types which have valid overloads for the specified callable.
  *
  * The priority if the supported executor is set according to the order
@@ -291,7 +291,7 @@ enable_exec_on_desc_priority(Function&& f,
  * For each supported executor a set of runtime checks are performed one by one
  * (highest to lowest priority) until one of the checks passes, and that executor
  * is selected.
- * Custom runtime checks can be create be deriving from the class
+ * Custom runtime checks can be created by deriving from the class
  * \ref executor_runtime_checks and can be passed as a template parameter
  * to this function.
  *

@@ -75,7 +75,7 @@ constexpr bool is_instance_of_v = is_instance_of<Executor, Type>::value;
  * executor is an instance of the specified executor class template
  *
  * In PCL this is used to choose an overload of a function based on the
- * executor type and throw a compile time if a overload of that function
+ * executor type and throw a compile time error if a overload of that function
  * corresponding to that executor type doesn't exist but the function is
  * being called with the unsupported executor type.
  *
@@ -121,7 +121,7 @@ constexpr bool is_instance_of_any_v = is_instance_of_any<Executor, Types...>::va
  * executor is an instance of any of the specified executor class templates
  *
  * In PCL this is used to choose an overload of a function based on the
- * executor type and throw a compile time if a overload of that function
+ * executor type and throw a compile time error if a overload of that function
  * corresponding to that executor type doesn't exist but the function is
  * being called with the unsupported executor type.
  *

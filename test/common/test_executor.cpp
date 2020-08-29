@@ -236,7 +236,7 @@ class ExecutorBestFitMatrixMultiplication : public ::testing::Test,
 TEST_F(ExecutorBestFitMatrixMultiplication, executors)
 {
   double dataA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9}, dataB[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9},
-         dataC[9] = {};
+         dataC[9] = {0};
   Eigen::MatrixXd a = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(dataA);
   Eigen::MatrixXd b = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(dataB);
   Eigen::MatrixXd c = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(dataC);
