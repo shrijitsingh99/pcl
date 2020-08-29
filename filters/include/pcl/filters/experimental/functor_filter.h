@@ -96,17 +96,13 @@ public:
       removed_indices_->reserve(indices_->size());
     }
 
-    auto cond_filtering = [&](executor::executor_index_t<Executor> index) {
-      pcl::utils::ignore(index);
-#pragma omp for
-      for (std::ptrdiff_t idx = 0; idx < indices_->size(); ++idx) {
-        if (negative_ != functor_(*input_, (*indices_)[idx])) {
-          keep[idx] = true;
-        }
+    auto cond_filtering = [&](auto idx) {
+      if (negative_ != functor_(*input_, (*indices_)[idx])) {
+        keep[idx] = true;
       }
     };
 
-    exec.bulk_execute(cond_filtering, 0);
+    exec.bulk_execute(cond_filtering, indices_->size());
     extractMarkedIndices(indices, keep);
   }
 
