@@ -15,26 +15,36 @@
 using namespace pcl;
 using namespace executor;
 
-using ExecutorAlwaysAvailableTypes = ::testing::Types<const default_inline_executor,
-                                                      default_inline_executor,
-                                                      const default_sse_executor,
-                                                      default_sse_executor>;
+const auto const_default_inline_executor = default_inline_executor{};
+const auto const_default_sse_executor = default_sse_executor{};
+const auto const_default_omp_executor = default_omp_executor{};
 
-using ExecutorCondAvailableTypes = ::testing::Types<const default_inline_executor,
-                                                    default_inline_executor,
-                                                    const default_sse_executor,
-                                                    default_sse_executor,
-                                                    const default_omp_executor,
-                                                    default_omp_executor>;
+using AvailableExecutorsTuple =
+    typename pcl::filter_tuple_values<is_executor_instance_available,
+                                      decltype(std::make_tuple(
+                                          const_default_inline_executor,
+                                          default_inline_executor{},
+                                          const_default_sse_executor,
+                                          default_sse_executor{},
+                                          const_default_omp_executor,
+                                          default_omp_executor{}))>::type;
 
-using ExecutorTypes = std::conditional_t<is_executor_available_v<omp_executor>,
-                                         ExecutorCondAvailableTypes,
-                                         ExecutorAlwaysAvailableTypes>;
+template <typename T>
+struct TestExecutorTypes {};
+
+template <typename... Executors>
+struct TestExecutorTypes<std::tuple<Executors...>> {
+  using type = ::testing::Types<Executors...>;
+};
+
+using TestAvailableExecutorTypes =
+    typename TestExecutorTypes<AvailableExecutorsTuple>::type;
+
 
 template <typename Executor>
 class ExecutorValidity : public ::testing::Test {};
 
-TYPED_TEST_SUITE(ExecutorValidity, ExecutorTypes);
+TYPED_TEST_SUITE(ExecutorValidity, TestAvailableExecutorTypes);
 
 TYPED_TEST(ExecutorValidity, executors)
 {
@@ -45,7 +55,7 @@ TYPED_TEST(ExecutorValidity, executors)
 template <typename Executor>
 class ExecutorPropertyTraits : public ::testing::Test {};
 
-TYPED_TEST_SUITE(ExecutorPropertyTraits, ExecutorTypes);
+TYPED_TEST_SUITE(ExecutorPropertyTraits, TestAvailableExecutorTypes);
 
 TYPED_TEST(ExecutorPropertyTraits, executors)
 {
@@ -62,7 +72,7 @@ TYPED_TEST(ExecutorPropertyTraits, executors)
 template <typename Executor>
 class ExecutorProperties : public ::testing::Test {};
 
-TYPED_TEST_SUITE(ExecutorProperties, ExecutorTypes);
+TYPED_TEST_SUITE(ExecutorProperties, TestAvailableExecutorTypes);
 
 TYPED_TEST(ExecutorProperties, executors)
 {
@@ -80,7 +90,7 @@ TYPED_TEST(ExecutorProperties, executors)
 template <typename Executor>
 class ExecutorExecute : public ::testing::Test {};
 
-TYPED_TEST_SUITE(ExecutorExecute, ExecutorTypes);
+TYPED_TEST_SUITE(ExecutorExecute, TestAvailableExecutorTypes);
 
 TYPED_TEST(ExecutorExecute, executors)
 {
@@ -108,7 +118,7 @@ protected:
   struct derived_inline : executor::inline_executor<Blocking> {};
 };
 
-TYPED_TEST_SUITE(ExecutorInstanceOfAny, ExecutorTypes);
+TYPED_TEST_SUITE(ExecutorInstanceOfAny, TestAvailableExecutorTypes);
 
 TYPED_TEST(ExecutorInstanceOfAny, executors)
 {
@@ -155,7 +165,7 @@ protected:
   }
 
   template <typename ExecutorT,
-            typename executor::InstanceOf<ExecutorT, omp_executor> = 0>
+      typename executor::InstanceOf<ExecutorT, omp_executor> = 0>
   void
   mmul(const ExecutorT ex,
        const Eigen::MatrixXd& a,
@@ -186,8 +196,8 @@ protected:
 
     auto supported_executors =
         std::conditional_t<is_executor_available_v<omp_executor>,
-                           std::tuple<default_omp_executor, default_inline_executor>,
-                           std::tuple<default_inline_executor>>();
+            std::tuple<default_omp_executor, default_inline_executor>,
+            std::tuple<default_inline_executor>>();
 
     if (custom_priority)
       enable_exec_with_priority(mul, supported_executors);
@@ -200,14 +210,14 @@ template <typename Executor>
 class ExecutorMatrixMultiplication : public ::testing::Test,
                                      public MatrixMultiplication {};
 
-TYPED_TEST_SUITE(ExecutorMatrixMultiplication, ExecutorTypes);
+TYPED_TEST_SUITE(ExecutorMatrixMultiplication, TestAvailableExecutorTypes);
 
 TYPED_TEST(ExecutorMatrixMultiplication, executors)
 {
   TypeParam exec;
 
   double dataA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9}, dataB[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9},
-         dataC[9] = {0};
+      dataC[9] = {0};
   Eigen::MatrixXd a = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(dataA);
   Eigen::MatrixXd b = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(dataB);
   Eigen::MatrixXd c = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(dataC);
@@ -225,10 +235,11 @@ class ExecutorBestFitMatrixMultiplication : public ::testing::Test,
 
 TEST_F(ExecutorBestFitMatrixMultiplication, executors)
 {
-  double dataA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9}, dataB[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+  double dataA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9}, dataB[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9},
+         dataC[9] = {};
   Eigen::MatrixXd a = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(dataA);
   Eigen::MatrixXd b = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(dataB);
-  Eigen::MatrixXd c = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>({0});
+  Eigen::MatrixXd c = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(dataC);
 
   Eigen::MatrixXd ans(3, 3);
   ans << 30, 36, 42, 66, 81, 96, 102, 126, 150;
