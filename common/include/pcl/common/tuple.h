@@ -123,7 +123,7 @@ private:
  * \brief Filters elements of \p Tuple based on the provided predicate/condition
  *
  * \tparam Predicate A trait which takes a tuple element as parameter and defines a
- * boolean member \p value which dictates whether to filter the tuple element or not
+ * static boolean member \p value which dictates whether to filter the tuple element or not
  * \tparam Tuple a tuple to filter
  *
  */

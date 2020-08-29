@@ -102,12 +102,7 @@ TYPED_TEST(ExecutorExecute, executors)
   EXPECT_EQ(c, 3);
 
   std::array<int, 3> c_vec = {0};
-  exec.bulk_execute(
-      [&c_vec](auto) {
-        for (auto& val : c_vec)
-          val = 1;
-      },
-      3);
+  exec.bulk_execute([&c_vec](auto index) { c_vec[index] = 1; }, 3);
   EXPECT_EQ(c_vec[0] + c_vec[1] + c_vec[2], c_vec.size());
 }
 
@@ -139,9 +134,21 @@ TYPED_TEST(ExecutorInstanceOfAny, executors)
 TEST(ExecutorRuntimeChecks, ExecutorEnviornmentVariableCheck)
 {
   auto env_check = [&](auto exec, const char* env_name) {
-    setenv(env_name, "OFF", true);
+
+#ifdef _WIN32
+    const auto env_string = std::string(env_name) + "=OFF";
+    _putenv(env_string+)
+#else
+    EXPECT_EQ(setenv(env_name, "OFF", true), 0);
+#endif
     EXPECT_FALSE(executor_runtime_checks::check(exec));
-    setenv(env_name, "ON", true);
+
+#ifdef _WIN32
+    const auto env_string = std::string(env_name) + "=ON";
+    _putenv(env_string+)
+#else
+    EXPECT_EQ(setenv(env_name, "ON", true), 0);
+#endif
     EXPECT_TRUE(executor_runtime_checks::check(exec));
   };
 
@@ -172,16 +179,13 @@ protected:
        const Eigen::MatrixXd& b,
        Eigen::MatrixXd& c)
   {
-    auto mul = [&](typename decltype(ex)::index_type index) {
-#pragma omp for schedule(static)
-      for (int i = 0; i < a.rows(); i = i + 1) {
-        for (int j = 0; j < b.cols(); j = j + 1) {
-          c(i, j) = 0.0;
-          for (int k = 0; k < a.cols(); k = k + 1) {
-            c(i, j) += a(i, k) * b(k, j);
+    auto mul = [&](auto index) {
+        for (int j = 0; j < b.cols(); ++j) {
+          c(index, j) = 0.0;
+          for (int k = 0; k < a.cols(); ++k) {
+            c(index, j) += a(index, k) * b(k, j);
           }
         }
-      }
     };
     ex.bulk_execute(mul, a.rows());
   }
@@ -241,8 +245,7 @@ TEST_F(ExecutorBestFitMatrixMultiplication, executors)
   Eigen::MatrixXd b = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(dataB);
   Eigen::MatrixXd c = Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>(dataC);
 
-  Eigen::MatrixXd ans(3, 3);
-  ans << 30, 36, 42, 66, 81, 96, 102, 126, 150;
+  const auto ans = (Eigen::Matrix3d() << 30, 36, 42, 66, 81, 96, 102, 126, 150).finished();
 
   c.setZero();
   this->mmul(a, b, c, true);

@@ -51,27 +51,22 @@ struct inline_executor {
 
   template <typename F, typename... Args>
   void
-  bulk_execute(F&& f, const std::size_t&) const
+  bulk_execute(F&& f, const std::size_t& n) const
   {
-    f(0);
+    for (index_type idx = 0; idx < n; ++idx)
+      f(idx);
   }
 
-  static constexpr auto
+  static constexpr decltype(auto)
   query(const blocking_t&) noexcept
   {
-    return Blocking();
+    return blocking_t::always;
   }
 
   inline_executor<blocking_t::always_t, ProtoAllocator>
   require(const blocking_t::always_t&) const
   {
     return {};
-  }
-
-  static constexpr auto
-  name()
-  {
-    return "inline_executor";
   }
 };
 

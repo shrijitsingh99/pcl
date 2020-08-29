@@ -100,22 +100,16 @@ struct cuda_executor {
 #endif
   }
 
-  static constexpr auto
+  static constexpr decltype(auto)
   query(const blocking_t&) noexcept
   {
-    return Blocking{};
+    return blocking_t::always;
   }
 
   cuda_executor<blocking_t::always_t, ProtoAllocator>
   require(const blocking_t::always_t&) const
   {
     return {};
-  }
-
-  static constexpr auto
-  name()
-  {
-    return "cuda_executor";
   }
 };
 

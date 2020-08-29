@@ -33,11 +33,7 @@ template <typename Blocking = blocking_t::always_t,
           typename ProtoAllocator = std::allocator<void>>
 struct omp_executor {
   using shape_type = uindex_t;
-
-  struct index_type {
-    shape_type max;
-    int idx; // TODO: Switch to sindex_t
-  };
+  using index_type = int;
 
   shape_type max_threads = 0;
 
@@ -87,37 +83,25 @@ struct omp_executor {
     static_assert(is_executor_available_v<omp_executor>, "OpenMP executor unavailable");
     pcl::utils::ignore(f, n);
 #ifdef _OPENMP
-    const auto num_threads = n ? std::min(max_threads, n) : max_threads;
-    if (num_threads < n)
-      PCL_WARN("[pcl::executor::omp_executor] Limiting max number of threads to "
-               "executor specified limit of %zu, instead of passed value %zu",
-               num_threads,
-               n);
-
-#pragma omp parallel num_threads(num_threads)
+#pragma omp parallel num_threads(max_threads)
     {
-      index_type index{num_threads, omp_get_thread_num()};
-      f(index);
+#pragma omp for nowait
+      for (index_type index = 0; index < n; ++index)
+        f(index);
     }
 #endif
   }
 
-  static constexpr auto
+  static constexpr decltype(auto)
   query(const blocking_t&) noexcept
   {
-    return Blocking{};
+    return blocking_t::always;
   }
 
   omp_executor<blocking_t::always_t, ProtoAllocator>
   require(const blocking_t::always_t&) const
   {
     return {};
-  }
-
-  static constexpr auto
-  name()
-  {
-    return "omp_executor";
   }
 };
 

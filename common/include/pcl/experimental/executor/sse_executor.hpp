@@ -54,29 +54,24 @@ struct sse_executor {
 
   template <typename F>
   void
-  bulk_execute(F&& f, const shape_type&) const
+  bulk_execute(F&& f, const shape_type& n) const
   {
     static_assert(is_executor_available_v<sse_executor>, "SSE executor unavailable");
     // TODO: Look into  #pragma simd and what bulk execute will do for SSE
-    f(0);
+    for (index_type idx = 0; idx < n; ++idx)
+      f(idx);
   }
 
-  static constexpr auto
+  static constexpr decltype(auto)
   query(const blocking_t&) noexcept
   {
-    return Blocking{};
+    return blocking_t::always;
   }
 
   sse_executor<blocking_t::always_t, ProtoAllocator>
   require(const blocking_t::always_t&) const
   {
     return {};
-  }
-
-  static constexpr auto
-  name()
-  {
-    return "sse_executor";
   }
 };
 
