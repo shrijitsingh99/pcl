@@ -126,7 +126,7 @@ struct executor_predicate {
 
   template <typename T>
   struct condition<T,
-                   std::enable_if_t<is_executor_instance_available_v<T> &&
+                   std::enable_if_t<is_executor_instance_available<T>::value &&
                                     pcl::tuple_contains_type_v<T, Supported>>>
   : std::true_type {};
 };
