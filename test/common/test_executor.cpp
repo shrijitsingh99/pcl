@@ -139,6 +139,8 @@ TYPED_TEST(ExecutorInstanceOfAny, executors)
 TEST(ExecutorRuntimeChecks, ExecutorEnviornmentVariableCheck)
 {
   auto env_check = [&](auto exec, const char* env_name) {
+    if (is_executor_instance_available<decltype(exec)>::value)
+      return;
     setenv(env_name, "OFF", true);
     EXPECT_FALSE(executor_runtime_checks::check(exec));
     setenv(env_name, "ON", true);
