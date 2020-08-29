@@ -31,8 +31,8 @@ struct is_executor_available<inline_executor> : std::true_type {};
 template <typename Blocking = blocking_t::always_t,
           typename ProtoAllocator = std::allocator<void>>
 struct inline_executor {
-  using shape_type = uindex_t ;
-  using index_type = uindex_t ;
+  using shape_type = uindex_t;
+  using index_type = uindex_t;
 
   template <typename Executor, InstanceOf<Executor, inline_executor> = 0>
   friend constexpr bool

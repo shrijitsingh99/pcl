@@ -66,7 +66,6 @@ struct is_instance_of<
 template <typename Executor, template <typename...> class Type>
 constexpr bool is_instance_of_v = is_instance_of<Executor, Type>::value;
 
-
 /**
  * \brief A helper trait which uses enable_if in which the boolean condition is
  * \ref is_instance_of and the type of enable_if is int
@@ -92,7 +91,6 @@ constexpr bool is_instance_of_v = is_instance_of<Executor, Type>::value;
  */
 template <typename Executor, template <typename...> class Type>
 using InstanceOf = std::enable_if_t<is_instance_of_v<Executor, Type>, int>;
-
 
 /**
  * \brief Checks whether the executor is an instance any of the specified

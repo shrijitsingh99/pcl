@@ -106,11 +106,13 @@ execute(Function&&, Executor&)
   return false;
 }
 
+// clang-format off
 template <
     typename Function,
     template <typename...> class Executor,
     typename... Properties,
     typename std::enable_if<executor::is_executor_available_v<Executor>, int>::type = 0>
+// clang-format on
 bool
 execute(Function&& f, Executor<Properties...>& exec)
 {

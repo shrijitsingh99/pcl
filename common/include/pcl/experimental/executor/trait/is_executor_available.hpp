@@ -75,7 +75,8 @@ struct is_executor_instance_available<Executor<Properties...>>
 : is_executor_available<Executor> {};
 
 template <template <typename...> class Executor>
-constexpr bool is_executor_instance_available_v = is_executor_available<Executor>::value;
+constexpr bool is_executor_instance_available_v =
+    is_executor_available<Executor>::value;
 
 } // namespace executor
 } // namespace pcl
