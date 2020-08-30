@@ -34,14 +34,14 @@ struct inline_executor {
   using shape_type = uindex_t;
   using index_type = uindex_t;
 
-  template <typename Executor, InstanceOf<Executor, inline_executor> = 0>
+  template <typename Executor, InstanceOf<Executor, ::pcl::executor::inline_executor> = 0>
   friend constexpr bool
   operator==(const inline_executor&, const Executor&) noexcept
   {
     return std::is_same<inline_executor, Executor>::value;
   }
 
-  template <typename Executor, InstanceOf<Executor, inline_executor> = 0>
+  template <typename Executor, InstanceOf<Executor, ::pcl::executor::inline_executor> = 0>
   friend constexpr bool
   operator!=(const inline_executor& lhs, const Executor& rhs) noexcept
   {

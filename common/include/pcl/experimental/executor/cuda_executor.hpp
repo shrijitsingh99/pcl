@@ -53,14 +53,14 @@ struct cuda_executor {
     } grid_size, block_size;
   };
 
-  template <typename Executor, InstanceOf<Executor, cuda_executor> = 0>
+  template <typename Executor, InstanceOf<Executor, ::pcl::executor::cuda_executor> = 0>
   friend constexpr bool
   operator==(const cuda_executor&, const Executor&) noexcept
   {
     return std::is_same<cuda_executor, Executor>::value;
   }
 
-  template <typename Executor, InstanceOf<Executor, cuda_executor> = 0>
+  template <typename Executor, ::pcl::executor::InstanceOf<Executor, cuda_executor> = 0>
   friend constexpr bool
   operator!=(const cuda_executor& lhs, const Executor& rhs) noexcept
   {
