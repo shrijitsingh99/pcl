@@ -131,16 +131,14 @@ TEST(ExecutorRuntimeChecks, ExecutorEnviornmentVariableCheck)
   auto env_check = [&](auto exec, const char* env_name) {
 
 #ifdef _WIN32
-    const auto env_string = std::string(env_name) + "=OFF";
-    _putenv(env_string+)
+    _putenv((std::string(env_name) + "=OFF").c_str());
 #else
     EXPECT_EQ(setenv(env_name, "OFF", true), 0);
 #endif
     EXPECT_FALSE(executor_runtime_checks::check(exec));
 
 #ifdef _WIN32
-    const auto env_string = std::string(env_name) + "=ON";
-    _putenv(env_string+)
+    _putenv((std::string(env_name) + "=ON").c_str());
 #else
     EXPECT_EQ(setenv(env_name, "ON", true), 0);
 #endif
