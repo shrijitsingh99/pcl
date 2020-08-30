@@ -37,14 +37,14 @@ struct sse_executor {
   using shape_type = uindex_t;
   using index_type = uindex_t;
 
-  template <typename Executor, InstanceOf<Executor, executor::sse_executor> = 0>
+  template <typename Executor, InstanceOf<Executor, ::pcl::executor::sse_executor> = 0>
   friend constexpr bool
   operator==(const sse_executor&, const Executor&) noexcept
   {
     return std::is_same<sse_executor, Executor>::value;
   }
 
-  template <typename Executor, InstanceOf<Executor, executor::sse_executor> = 0>
+  template <typename Executor, InstanceOf<Executor, ::pcl::executor::sse_executor> = 0>
   friend constexpr bool
   operator!=(const sse_executor& lhs, const Executor& rhs) noexcept
   {
