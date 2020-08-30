@@ -69,7 +69,7 @@ struct FunctorFilterExecutor : public ::testing::Test {
     indices = make_shared<Indices>();
     indices->reserve(cloud->size() / 2);
     for (index_t i = negative_cloud.size() / 2;
-         i < negative_cloud.size() + positive_cloud.size() / 2;
+         i < static_cast<index_t>(negative_cloud.size() + positive_cloud.size() / 2);
          ++i) {
       indices->push_back(i);
     }
