@@ -53,15 +53,16 @@ constexpr bool equality_comparable_v = equality_comparable<T1, T2>::value;
 template <typename Executor, template <typename...> class Type, typename = void>
 struct is_instance_of : std::false_type {};
 
+// clang-format off
 template <template <typename...> class Executor,
-          template <typename...>
-          class Type,
+          template <typename...> class Type,
           typename... Args>
 struct is_instance_of<
     Executor<Args...>,
     Type,
     std::enable_if_t<std::is_base_of<Type<Args...>, Executor<Args...>>::value>>
 : std::true_type {};
+// clang-format on
 
 template <typename Executor, template <typename...> class Type>
 constexpr bool is_instance_of_v = is_instance_of<Executor, Type>::value;
@@ -90,7 +91,7 @@ constexpr bool is_instance_of_v = is_instance_of<Executor, Type>::value;
  * \tparam Type an executor class template
  */
 template <typename Executor, template <typename...> class Type>
-using InstanceOf = std::enable_if_t<is_instance_of_v<Executor, Type>, int>;
+using InstanceOf = std::enable_if_t<is_instance_of<Executor, Type>::value, int>;
 
 /**
  * \brief Checks whether the executor is an instance any of the specified
