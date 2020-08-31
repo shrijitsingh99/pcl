@@ -44,13 +44,13 @@ namespace executor {
  * \tparam Executor an executor to enforce the property on
  * \tparam Property the property to enforce
  */
-template <typename Executor,
-          typename Property,
-          typename std::enable_if_t<
-              Property::template is_applicable_property<Executor>::value &&
-                  Property::is_requirable &&
-                  detail::contains_property<Executor, Property>::value,
-              int> = 0>
+template <
+    typename Executor,
+    typename Property,
+    typename std::enable_if_t<Property::template is_applicable_property_v<Executor> &&
+                                  Property::is_requirable &&
+                                  detail::contains_property_v<Executor, Property>,
+                              int> = 0>
 constexpr decltype(auto)
 require(const Executor& ex, const Property& p) noexcept
 {

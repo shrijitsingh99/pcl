@@ -60,7 +60,7 @@ struct cuda_executor {
     return std::is_same<cuda_executor, Executor>::value;
   }
 
-  template <typename Executor, executor::InstanceOf<Executor, cuda_executor> = 0>
+  template <typename Executor, InstanceOf<Executor, executor::cuda_executor> = 0>
   friend constexpr bool
   operator!=(const cuda_executor& lhs, const Executor& rhs) noexcept
   {

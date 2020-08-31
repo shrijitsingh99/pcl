@@ -12,6 +12,8 @@
 
 #include <Eigen/Dense>
 
+#include <array>
+
 using namespace pcl;
 using namespace executor;
 

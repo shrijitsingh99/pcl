@@ -60,7 +60,7 @@ struct omp_executor {
     return std::is_same<omp_executor, Executor>::value;
   }
 
-  template <typename Executor, executor::InstanceOf<Executor, omp_executor> = 0>
+  template <typename Executor, InstanceOf<Executor, executor::omp_executor> = 0>
   friend constexpr bool
   operator!=(const omp_executor& lhs, const Executor& rhs) noexcept
   {

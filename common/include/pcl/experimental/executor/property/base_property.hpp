@@ -116,6 +116,9 @@ template <typename Executor, typename Property>
 using contains_property = std::is_same<
     std::remove_const_t<decltype(Property::template static_query<Executor>::value)>,
     Property>;
+
+template <typename Executor, typename Property>
+constexpr bool contains_property_v = contains_property<Executor, Property>::value;
 } // namespace detail
 
 } // namespace executor
